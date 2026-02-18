@@ -1,5 +1,5 @@
 Exercise 0: Désintégration de noyaux atomique
-OPbx
+OPbx zizi
 Les fichiers Configfile.h et .hpp contiennent une classe qui aide la fonction C++ principale à extraire les données d'un fichier de configuration et à fournir les valeurs au code du moteur.
 configuration.in.example contient un exemple prédéfini des entrées pour une simulation, dont la signification est définie plus en détail dans engine.cpp
 
