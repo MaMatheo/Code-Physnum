@@ -9,7 +9,7 @@ executable = './engine.exe'  # Name of the executable (NB: .exe extension is req
 input_filename = 'configuration.in.example'  # Name of the input file
 
 
-dt =    # TODO change
+dt = 3. / 4 # TODO change
 nsimul = len(dt)  # Number of simulations to perform
 
 
@@ -21,7 +21,7 @@ N0 = 100.0
 gamma   = 1
 
 # TODO: Insert here the expressions for the exact final solution
-N_th  = 0
+N_th  = N0 * np.exp(-gamma*tfin)
 
 
 
