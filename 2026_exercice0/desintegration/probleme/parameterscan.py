@@ -4,18 +4,18 @@ import matplotlib.pyplot as plt
 
 # Parameters
 # TODO adapt to what you need (folder path executable input filename)
-repertoire = ''  # Path to the compiled code (NB: ./ is not required on Windows)
+repertoire = './'  # Path to the compiled code (NB: ./ is not required on Windows)
 executable = './engine.exe'  # Name of the executable (NB: .exe extension is required on Windows)
 input_filename = 'configuration.in.example'  # Name of the input file
 
 
-dt =  1  # TODO change
-nsimul = 10  # Number of simulations to perform
+dt = np.linspace(0,3,10)  # TODO change
+nsimul = len(dt)  # Number of simulations to perform
 
 
 # Analysis
 # TODO insert the values
-tfin = dt*nsimul
+tfin = dt[-1]  # Final time of the simulation (NB: it should be the same for all simulations)
 N0 = 100.0
 gamma   = 1
 
