@@ -9,7 +9,7 @@ executable = './engine.exe'  # Name of the executable (NB: .exe extension is req
 input_filename = 'configuration.in.example'  # Name of the input file
 
 
-dt = 3. / 4 # TODO change
+dt =    # TODO change
 nsimul = len(dt)  # Number of simulations to perform
 
 

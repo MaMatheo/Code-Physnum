@@ -57,7 +57,7 @@ private:
   // TODO écrire la fonction 
     void compute_f(valarray<double>& f) const
     {
-      f = - gamma*N;
+      f[0] = - gamma*N0;
     }
 
     // New step method from EngineEuler
@@ -67,8 +67,10 @@ private:
       valarray<double> Nold=valarray<double>(N);
       valarray<double> delta_N_EE=valarray<double>(N);
 
-      t += dt;                  //mise à jour du temps 
+      compute_f(f);
+      Nold += dt * f
 
+      t += dt;     //mise à jour du temps 
       N = Nold;    //mise à jour de la solution
   
     }
