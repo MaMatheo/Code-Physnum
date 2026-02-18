@@ -1,0 +1,14 @@
+Exercise 0: Désintégration de noyaux atomique
+
+Les fichiers Configfile.h et .hpp contiennent une classe qui aide la fonction C++ principale à extraire les données d'un fichier de configuration et à fournir les valeurs au code du moteur.
+configuration.in.example contient un exemple prédéfini des entrées pour une simulation, dont la signification est définie plus en détail dans engine.cpp
+
+engine.cpp est le code source C++ principal, qui doit être complété à certains endroits pour créer un exemple de code fonctionnel.
+Une fois cela fait, un exécutable doit être créé en compilant ce code, à l'aide d'une commande du type
+
+
+g++ -std=c++17 -O2 -Wall engine.cpp -o engine.exe
+
+Après cela, le code peut être exécuté avec les paramètres standard définis dans le fichier de configuration en exécutant simplement ./engine.exe.
+Le fichier python parameterscan.py peut être utilisé pour comparer différents réglages de paramètres et les vérifier par rapport à votre solution analytique.
+Il montre également comment d'autres valeurs de paramètres peuvent être ajoutées à l'appel simple engine.exe pour les analyser.

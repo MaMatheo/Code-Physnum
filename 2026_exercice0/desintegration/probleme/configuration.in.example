@@ -1,0 +1,5 @@
+tfin = 3.
+dt = 0.5
+N0 = 100.0
+gamma = 1
+sampling = 1
