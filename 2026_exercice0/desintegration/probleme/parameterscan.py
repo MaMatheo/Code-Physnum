@@ -9,13 +9,13 @@ executable = './engine.exe'  # Name of the executable (NB: .exe extension is req
 input_filename = 'configuration.in.example'  # Name of the input file
 
 
-dt = np.linspace(0,3,10)  # TODO change
+dt = 3. / 2**np.arange(1,10)  # TODO change
 nsimul = len(dt)  # Number of simulations to perform
 
 
 # Analysis
 # TODO insert the values
-tfin = dt[-1]  # Final time of the simulation (NB: it should be the same for all simulations)
+tfin = 3  # Final time of the simulation (NB: it should be the same for all simulations)
 N0 = 100.0
 gamma   = 1
 
@@ -56,7 +56,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     N_list.append(NN)
     Gamma_list.append(-np.log(NN/N0)/tfin)
     # TODO compute the error for each simulation
-    error[i] =  0
+    error[i] =  np.abs(NN - N_th)/N_th  # Example: absolute error in the final N
 
 
 
@@ -65,7 +65,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     axs.set_ylabel('N [AU]', fontsize=fs)
 
 axs.set_xlim(0, tfin)
-axs.set_ylim(0, N0)
+#axs.set_ylim(0, N0)
 
 plt.tight_layout()
 plt.savefig(f'Decay.png', dpi=300)
@@ -112,3 +112,5 @@ plt.ylim(0, gamma*2)
 plt.grid(True)
 plt.tight_layout()
 plt.savefig(f'Gamma.png', dpi=300)
+
+plt.show()

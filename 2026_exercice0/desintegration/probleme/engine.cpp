@@ -68,10 +68,10 @@ private:
       valarray<double> delta_N_EE=valarray<double>(N);
 
       compute_f(f);
-      Nold += dt * f;
+      delta_N_EE = f*dt; // Euler explicite
 
       t += dt;     //mise à jour du temps 
-      N = Nold;    //mise à jour de la solution
+      N = Nold+delta_N_EE;    //mise à jour de la solution
   
     }
 
