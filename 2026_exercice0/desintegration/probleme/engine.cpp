@@ -57,7 +57,7 @@ private:
   // TODO écrire la fonction 
     void compute_f(valarray<double>& f) const
     {
-      f[0]      = 0 ; // calcul de la fonction f
+      f = - gamma*N;
     }
 
     // New step method from EngineEuler
