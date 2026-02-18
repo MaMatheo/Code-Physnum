@@ -68,7 +68,7 @@ private:
       valarray<double> delta_N_EE=valarray<double>(N);
 
       compute_f(f);
-      Nold += dt * f
+      Nold += dt * f;
 
       t += dt;     //mise à jour du temps 
       N = Nold;    //mise à jour de la solution
