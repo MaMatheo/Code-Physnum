@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # Parameters
 # TODO adapt to what you need (folder path executable input filename)
-repertoire = './'  # Path to the compiled code (NB: ./ is not required on Windows)
+repertoire = ''  # Path to the compiled code (NB: ./ is not required on Windows)
 executable = './engine.exe'  # Name of the executable (NB: .exe extension is required on Windows)
 input_filename = 'configuration.in.example'  # Name of the input file
 
