@@ -1,7 +1,7 @@
 import numpy as np
 import subprocess
 import matplotlib.pyplot as plt
-from scipy.interpolate import CubicSpline # If you don't have this, you can use np.interp instead, but it may be less accurate
+#from scipy.interpolate import CubicSpline # If you don't have this, you can use np.interp instead, but it may be less accurate
 import os
 
 # Parameters
