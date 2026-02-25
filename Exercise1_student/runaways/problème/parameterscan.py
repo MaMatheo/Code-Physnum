@@ -55,7 +55,7 @@ N_exact =  N_analyt(t_ref)# exact solution as function of time
 
 ratio_exact = N_exact / Nfp
 #TODO: calculate tau_ref as the time when ratio_exact crosses Nr, using interpolation
-tau_ref = np.interp(0.2, N_analyt(t)/Nfp, t) 
+tau_ref = np.interp(0.2, N_analyt(t)/Nfp, t) ##pas sur que ca marche ca
 
 paramstr = 'dt'
 param = dt
@@ -113,7 +113,7 @@ for i in range(nsimul):
 
         if ratio[0] <= Nr <= ratio[-1]: # Check if Nr is within the range of ratio for interpolation
             try:
-                tau =  #TODO: interpolate to find tau where ratio crosses Nr
+                tau = 0 #TODO: interpolate to find tau where ratio crosses Nr
             except ValueError:
                 tau = np.nan
         else:
