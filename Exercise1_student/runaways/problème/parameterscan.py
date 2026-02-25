@@ -106,7 +106,8 @@ for i in range(nsimul):
         totalsteps.append(total_steps)
 
         #TODO: calculate ratio and tau using interpolation, and store in tau_list
-        ratio = N_analyt(t)/Nfp
+        ratio = N / Nfp
+        
 
         #N/Nfp
 
