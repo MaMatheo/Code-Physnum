@@ -106,13 +106,13 @@ for i in range(nsimul):
         totalsteps.append(total_steps)
 
         #TODO: calculate ratio and tau using interpolation, and store in tau_list
-        ratio = 0 # ratio as function of time
+        ratio = N_analyt(t)/Nfp
 
         #N/Nfp
 
         if ratio[0] <= Nr <= ratio[-1]: # Check if Nr is within the range of ratio for interpolation
             try:
-                tau = 0 #TODO: interpolate to find tau where ratio crosses Nr
+                tau =  np.interp(0.2, N_analyt(t)/Nfp, t)  #TODO: interpolate to find tau where ratio crosses Nr
             except ValueError:
                 tau = np.nan
         else:
@@ -120,7 +120,7 @@ for i in range(nsimul):
 
         tau_list.append(tau)
 
-        error[i] = 0 #TODO: calculate relative error on Nf and store in error[i]
+        error[i] =  #TODO: calculate relative error on Nf and store in error[i]
 
     axs.plot(t, N, label=f"dt={param[i]:.2e}", linewidth=lw, alpha=0.7)
 
