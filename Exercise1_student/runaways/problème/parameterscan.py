@@ -112,7 +112,7 @@ for i in range(nsimul):
 
         if ratio[0] <= Nr <= ratio[-1]: # Check if Nr is within the range of ratio for interpolation
             try:
-                tau =  np.interp(0.2, N_analyt(t)/Nfp, t)  #TODO: interpolate to find tau where ratio crosses Nr
+                tau =   #TODO: interpolate to find tau where ratio crosses Nr
             except ValueError:
                 tau = np.nan
         else:
