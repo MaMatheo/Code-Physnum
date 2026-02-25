@@ -55,7 +55,7 @@ N_exact =  N_analyt(t_ref)# exact solution as function of time
 
 ratio_exact = N_exact / Nfp
 #TODO: calculate tau_ref as the time when ratio_exact crosses Nr, using interpolation
-tau_ref = 0; 
+tau_ref = np.interp(0.2, N_analyt(t)/Nfp, t) 
 
 paramstr = 'dt'
 param = dt
