@@ -9,10 +9,10 @@ repertoire = ''
 executable = 'engine.exe' # Change this if your executable has a different name or path, like last week
 input_filename = 'configuration.in.example'
 
-tf = 0.0
+tf = 52
 N0 = 0.0
-g = 0.0
-d = 0.0
+g = 0.5
+d = 0.01
 
 alpha = 1  # 1 explicit, 0 implicit, 0.5 semi-implicit
 
@@ -112,7 +112,7 @@ for i in range(nsimul):
 
         if ratio[0] <= Nr <= ratio[-1]: # Check if Nr is within the range of ratio for interpolation
             try:
-                tau =   #TODO: interpolate to find tau where ratio crosses Nr
+                tau =  #TODO: interpolate to find tau where ratio crosses Nr
             except ValueError:
                 tau = np.nan
         else:
@@ -120,7 +120,7 @@ for i in range(nsimul):
 
         tau_list.append(tau)
 
-        error[i] =  #TODO: calculate relative error on Nf and store in error[i]
+        error[i] = abs(NN - Nf) / abs(Nf) #TODO: calculate relative error on Nf and store in error[i]
 
     axs.plot(t, N, label=f"dt={param[i]:.2e}", linewidth=lw, alpha=0.7)
 
