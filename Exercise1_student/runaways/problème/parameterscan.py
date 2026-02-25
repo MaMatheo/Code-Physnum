@@ -39,10 +39,10 @@ nsimul = len(dt)
 # Exact solution #TODO: Fill
 b = np.sqrt(g**2 + 4*d) #beta
 Nfp =  (g + b)/2
-def N_exact(t):
+def N_analyt(t):
     return 2*d*(1-np.exp(-b*t))/(b-g+(b+g)*np.exp(-b*t))
 
-Nf = N_exact(tf)  # exact solution at tf
+Nf = N_analyt(tf)  # exact solution at tf
 
 Nr = 0.2  # fraction of equilibrium defining characteristic time
 
@@ -50,7 +50,7 @@ Nr = 0.2  # fraction of equilibrium defining characteristic time
 t_ref = np.linspace(0, tf, 200000)
 
 #TODO: calculate N_exact as function of time
-N_exact = 0 # exact solution as function of time
+N_exact =  N_analyt(t_ref)# exact solution as function of time
 
 
 ratio_exact = N_exact / Nfp
