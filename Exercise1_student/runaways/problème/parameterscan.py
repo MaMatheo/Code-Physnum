@@ -9,7 +9,7 @@ repertoire = ''
 executable = 'engine.exe' # Change this if your executable has a different name or path, like last week
 input_filename = 'configuration.in.example'
 
-tf = 52
+tf = 32
 N0 = 0.0
 g = 0.5
 d = 0.01
@@ -113,7 +113,7 @@ for i in range(nsimul):
 
         if ratio[0] <= Nr <= ratio[-1]: # Check if Nr is within the range of ratio for interpolation
             try:
-                tau =  #TODO: interpolate to find tau where ratio crosses Nr
+                tau = np.interp(Nr, ratio[::-1], t[::-1]) # Interpolate to find tau where ratio crosses Nr
             except ValueError:
                 tau = np.nan
         else:
