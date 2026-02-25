@@ -33,12 +33,16 @@ os.makedirs(outdir, exist_ok=True)
 print("Saving results in:", outdir)
 # -------------------------------------------------
 
-dt = tf / 2**np.arange(2, 8) #TODO: Adjust for your needs
+dt = tf / 2**np.arange(2,8) #TODO: Adjust for your needs
 nsimul = len(dt)
 
 # Exact solution #TODO: Fill
-Nfp = 0. # steady state solution at t=inf
-Nf = 0.  # exact solution at tf
+b = np.sqrt(g**2 + 4*d) #beta
+Nfp =  (g + b)/2
+def N_exact(t):
+    return 2*d*(1-np.exp(-b*t))/(b-g+(b+g)*np.exp(-b*t))
+
+Nf = N_exact(tf)  # exact solution at tf
 
 Nr = 0.2  # fraction of equilibrium defining characteristic time
 
@@ -103,6 +107,8 @@ for i in range(nsimul):
 
         #TODO: calculate ratio and tau using interpolation, and store in tau_list
         ratio = 0 # ratio as function of time
+
+        #N/Nfp
 
         if ratio[0] <= Nr <= ratio[-1]: # Check if Nr is within the range of ratio for interpolation
             try:
