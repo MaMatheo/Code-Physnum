@@ -11,7 +11,7 @@ input_filename = 'configuration.in.example'
 
 tf = 32
 N0 = 0.0
-g = 0.5
+g = 0.5  # changer ici a -0.2 pour question c)
 d = 0.01
 
 alpha = 1  # 1 explicit, 0 implicit, 0.5 semi-implicit
