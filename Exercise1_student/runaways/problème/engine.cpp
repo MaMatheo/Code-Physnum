@@ -93,9 +93,10 @@ private:
         // TODO : Implementer la méthode d'Euler implicite et semi_implicite (en utilisant delta_N_EE)
         N = Nold + alpha*delta_N_EE + (1-alpha)*f*dt; // Euler implicite
         compute_f(f);
-        Ncontrol = Nold + alpha*delta_N_EE + (1-alpha)*f*dt // Ncontrole est la solution de reference pour le calcul de l'erreur, elle doit etre mise a jour a chaque iteration
+        Ncontrol = Nold + alpha*delta_N_EE + (1-alpha)*f*dt; // Ncontrole est la solution de reference pour le calcul de l'erreur, elle doit etre mise a jour a chaque iteration
+        
         // TODO : Calculer l'erreur relative entre N et Ncontrol pour le critere d'arret de la methode iterative
-        error = (abs(N - Ncontrol)/(abs(Ncontrol) + abs(N))).max(); // or abs(N[0] - Ncontrol[0])/(abs(Ncontrol[0]) + abs(N[0]))
+        error = abs(N[0] - Ncontrol[0])/(abs(Ncontrol[0]) + abs(N[0])); // or (abs(N - Ncontrol)/(abs(Ncontrol) + abs(N))).max();
         iteration += 1;
       }
       if(iteration>=maxit){
