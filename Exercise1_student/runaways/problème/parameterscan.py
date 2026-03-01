@@ -1,7 +1,8 @@
+
 import numpy as np
 import subprocess
 import matplotlib.pyplot as plt
-#from scipy.interpolate import CubicSpline # If you don't have this, you can use np.interp instead, but it may be less accurate
+from scipy.interpolate import CubicSpline # If you don't have this, you can use np.interp instead, but it may be less accurate
 import os
 
 # Parameters
@@ -41,8 +42,7 @@ b = np.sqrt(g**2 + 4*d) #beta
 Nfp =  (g + b)/2
 def N_analyt(t):
     return 2*d*(1-np.exp(-b*t))/(b-g+(b+g)*np.exp(-b*t))
-
-Nf = N_analyt(tf)  # exact solution at tf
+Nf =  N_analyt(tf) # exact solution at tf
 
 Nr = 0.2  # fraction of equilibrium defining characteristic time
 
@@ -55,7 +55,8 @@ N_exact =  N_analyt(t_ref)# exact solution as function of time
 
 ratio_exact = N_exact / Nfp
 #TODO: calculate tau_ref as the time when ratio_exact crosses Nr, using interpolation
-tau_ref = np.interp(0.2, ratio_exact, t_ref) #pas sur que ca marche ca
+cs = CubicSpline(ratio_exact, t_ref) #or tau_ref = np.interp(0.2, ratio_exact, t_ref) #pas sur que ca marche ca
+tau_ref = cs(Nr)
 
 paramstr = 'dt'
 param = dt
@@ -76,7 +77,7 @@ for i in range(nsimul):
     # Almost all parameters are passed as command line arguments, but you can also use an input file if you prefer. Adjust the command below accordingly.
     cmd = (
         f"{repertoire}{executable} {input_filename} "
-        f"{paramstr}={dt_val:.15g} output={output_path}"
+        f"{paramstr}={dt_val:.15g} output={output_path} "
         f" alpha={alpha:.2g} tf={tf:.3f} N0={N0:.3f} g={g:.4f} d={d:.4f}"
     )
 
@@ -113,7 +114,8 @@ for i in range(nsimul):
 
         if ratio[0] <= Nr <= ratio[-1]: # Check if Nr is within the range of ratio for interpolation
             try:
-                tau = np.interp(Nr, ratio, t) #TODO: interpolate to find tau where ratio crosses Nr
+                cs2 = CubicSpline(ratio, t)
+                tau = cs2(Nr)
             except ValueError:
                 tau = np.nan
         else:
@@ -193,4 +195,4 @@ plt.xlabel("Total steps")
 plt.ylabel("Relative error on tau")
 plt.grid(True, which="both", linestyle="--", linewidth=0.5)
 plt.tight_layout()
-plt.savefig(os.path.join(outdir, f"{figstr}_tau_error_vs_steps.png"), dpi=300)
+plt.savefig(os.path.join(outdir, f"{figstr}_tau_error_vs_steps.png"), dpi=300) 
