@@ -10,7 +10,8 @@ repertoire = ''
 executable = './engine.exe' # Change this if your executable has a different name or path, like last week
 input_filename = 'configuration.in.example'
 
-tf = 32
+#tf = 32
+tf = 1 #pour la question b)
 N0 = 0.0
 g = 0.5  # changer ici a -0.2 pour question c)
 d = 0.01
@@ -34,14 +35,22 @@ os.makedirs(outdir, exist_ok=True)
 print("Saving results in:", outdir)
 # -------------------------------------------------
 
-dt = tf / 2**np.arange(2,8) #TODO: Adjust for your needs
-nsimul = len(dt)
+#dt = tf / 2**np.arange(2,8) #TODO: Adjust for your needs
+dt = [tf/1064]  #pour question b)
+
+#nsimul = len(dt)
+nsimul = int(1) #pour question b)
+
 
 # Exact solution #TODO: Fill
 b = np.sqrt(g**2 + 4*d) #beta
 Nfp =  (g + b)/2
 def N_analyt(t):
     return 2*d*(1-np.exp(-b*t))/(b-g+(b+g)*np.exp(-b*t))
+
+def N_analyt_b(t):  #pour la question b)
+    return 2*d*t/(2 -t*(g+b))
+
 Nf =  N_analyt(tf) # exact solution at tf
 
 Nr = 0.2  # fraction of equilibrium defining characteristic time
@@ -50,8 +59,8 @@ Nr = 0.2  # fraction of equilibrium defining characteristic time
 t_ref = np.linspace(0, tf, 200000)
 
 #TODO: calculate N_exact as function of time
-N_exact =  N_analyt(t_ref)# exact solution as function of time
-
+#N_exact =  N_analyt(t_ref)# exact solution as function of time
+N_exact =  N_analyt_b(t_ref) #pour la question b)
 
 ratio_exact = N_exact / Nfp
 #TODO: calculate tau_ref as the time when ratio_exact crosses Nr, using interpolation
