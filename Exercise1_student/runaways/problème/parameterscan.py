@@ -7,7 +7,7 @@ import os
 
 # Parameters
 repertoire = ''
-executable = './engine.exe' # Change this if your executable has a different name or path, like last week
+executable = './engine2.exe' # Change this if your executable has a different name or path, like last week
 input_filename = 'configuration.in.example'
 
 tf = 32
