@@ -17,7 +17,7 @@ d = 0.01
 question_b = False
 question_c = True
 question_d = False
-
+#caca
 if question_c:
     g = -0.2
 
