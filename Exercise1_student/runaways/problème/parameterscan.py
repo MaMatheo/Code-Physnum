@@ -17,7 +17,7 @@ d = 0.01
 
 question_b = False
 question_c = False
-question_d = False
+question_d = True
 
 if question_c:
     g = -0.2
@@ -26,7 +26,10 @@ if question_c:
 if question_b:
     tf=1
 
-alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
+alpha = 1  # 1 explicit, 0 implicit, 0.5 semi-implicit
+
+if question_d: # for question d) we only need explicit
+    alpha = 1
 
 if alpha == 1:
     alphastr = "expl"
@@ -46,7 +49,9 @@ print("Saving results in:", outdir)
 # -------------------------------------------------
 
  #TODO: Adjust for your needs
-if question_b :
+if question_d:
+    dt = np.array([tf/16, tf/8, tf/4])  # for question d)
+elif question_b :
     dt = np.array([tf/1024])  #pour question b)
 else: dt = tf / 2**np.arange(2,8)
 
@@ -195,35 +200,37 @@ plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(outdir, f"{figstr}_Nf_conv.png"), dpi=300)
 
-plt.figure()
-plt.plot(dtlist, tau_list, 'r+-', label="numerical")
-plt.axhline(tau_ref, color='k', linestyle='--', label="Exact")
-plt.xlabel(r"d$\overline{t}$")
-plt.ylabel(r"Characteristic time $\overline{\tau}$")
-plt.xscale('log')
-#plt.ylim(0, tf/10)  # Set y-limits to focus on the relevant range
-plt.grid(True)
-plt.legend()
-plt.tight_layout()
-plt.savefig(os.path.join(outdir, f"{figstr}_tau.png"), dpi=300)
+if not ((question_d) or (question_b)): #pour la question d) on n'affiche pas tau
+    plt.figure()
+    plt.plot(dtlist, tau_list, 'r+-', label="numerical")
+    plt.axhline(tau_ref, color='k', linestyle='--', label="Exact")
+    plt.xlabel(r"d$\overline{t}$")
+    plt.ylabel(r"Characteristic time $\overline{\tau}$")
+    plt.xscale('log')
+    #plt.ylim(0, tf/10)  # Set y-limits to focus on the relevant range
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout() 
+    plt.savefig(os.path.join(outdir, f"{figstr}_tau.png"), dpi=300)
 
-tau_err = np.abs(1 - np.array(tau_list) / tau_ref)
+    tau_err = np.abs(1 - np.array(tau_list) / tau_ref)
 
-plt.figure()
-plt.loglog(dtlist, tau_err, 'r+-', label="numerical")
-plt.loglog(dtlist, dtlist, 'k--', label="O(dt)")
-plt.loglog(dtlist, dtlist**2, 'k-.', label="O(dt^2)")
-plt.xlabel(r"d$\overline{t}$")
-plt.ylabel(r"Relative error on $\overline{\tau}$")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.savefig(os.path.join(outdir, f"{figstr}_tau_error.png"), dpi=300)
+    plt.figure()
+    plt.loglog(dtlist, tau_err, 'r+-', label="numerical")
+    plt.loglog(dtlist, dtlist, 'k--', label="O(dt)")
+    plt.loglog(dtlist, dtlist**2, 'k-.', label="O(dt^2)")
+    plt.xlabel(r"d$\overline{t}$")
+    plt.ylabel(r"Relative error on $\overline{\tau}$")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout() 
+    plt.savefig(os.path.join(outdir, f"{figstr}_tau_error.png"), dpi=300)
 
-plt.figure()
-plt.loglog(totalsteps, tau_err, 'r+-', label=f"{alphastr}")
-plt.xlabel("Total steps")
-plt.ylabel("Relative error on tau")
-plt.grid(True, which="both", linestyle="--", linewidth=0.5)
-plt.tight_layout()
-plt.savefig(os.path.join(outdir, f"{figstr}_tau_error_vs_steps.png"), dpi=300) 
+    plt.figure()
+    plt.loglog(totalsteps, tau_err, 'r+-', label=f"{alphastr}")
+    plt.xlabel("Total steps")
+    plt.ylabel("Relative error on tau")
+    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+    plt.tight_layout() 
+    plt.savefig(os.path.join(outdir, f"{figstr}_tau_error_vs_steps.png"), dpi=300) 
+
