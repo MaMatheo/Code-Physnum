@@ -59,8 +59,8 @@ Nr = 0.2  # fraction of equilibrium defining characteristic time
 t_ref = np.linspace(0, tf, 200000)
 
 #TODO: calculate N_exact as function of time
-#N_exact =  N_analyt(t_ref)# exact solution as function of time
-N_exact =  N_analyt_b(t_ref) #pour la question b)
+N_exact =  N_analyt(t_ref)# exact solution as function of time
+N_exact_b =  N_analyt_b(t_ref) #pour la question b)
 
 ratio_exact = N_exact / Nfp
 #TODO: calculate tau_ref as the time when ratio_exact crosses Nr, using interpolation
@@ -138,6 +138,7 @@ for i in range(nsimul):
 
 
 plt.plot(t_ref, N_exact, 'k--', linewidth=2, label="Exact")
+plt.plot(t_ref, N_exact_b, 'r--', linewidth=2, label="approximation") #pour la question b)
 axs.set_xlabel(r'$\overline{t}$', fontsize=fs)
 axs.set_ylabel(r'$\overline{N}$', fontsize=fs)
 axs.set_xlim(0, tf)
