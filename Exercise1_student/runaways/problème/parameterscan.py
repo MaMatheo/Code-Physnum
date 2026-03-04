@@ -17,7 +17,7 @@ d = 0.01
 question_b = False
 question_c = True
 question_d = False
-#caca
+
 if question_c:
     g = -0.2
 
@@ -45,7 +45,7 @@ print("Saving results in:", outdir)
 
  #TODO: Adjust for your needs
 if question_b :
-    dt = [tf/1024]  #pour question b)
+    dt = np.array([tf/1024])  #pour question b)
 else: dt = tf / 2**np.arange(2,8)
 
 if question_b :     
@@ -157,7 +157,7 @@ if (question_b):
     plt.plot(t_ref, N_exact_b, 'r--', linewidth=2, label="approximation") 
 if (question_c):
     plt.plot(t_ref, N_exact_c, 'r--', linewidth=2, label="approximation") 
-    plt.axhline(y=-d/g, color='r', linestyle='--', label=r"n_\infty")
+    
 axs.set_xlabel(r'$\overline{t}$', fontsize=fs)
 axs.set_ylabel(r'$\overline{N}$', fontsize=fs)
 axs.set_xlim(0, tf)
