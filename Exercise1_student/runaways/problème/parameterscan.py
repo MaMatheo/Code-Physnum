@@ -12,10 +12,11 @@ input_filename = 'configuration.in.example'
 
 tf = 32
 N0 = 0.0
-g = 0.5  
+g = 0.5  # changer ici a -0.2 pour question c)
 d = 0.01
 question_b = False
 question_c = True
+question_d = False
 
 if question_c:
     g = -0.2
@@ -42,11 +43,14 @@ os.makedirs(outdir, exist_ok=True)
 print("Saving results in:", outdir)
 # -------------------------------------------------
 
-#dt = tf / 2**np.arange(2,8) #TODO: Adjust for your needs
-dt = [tf/1064]  #pour question b)
+ #TODO: Adjust for your needs
+if question_b :
+    dt = [tf/1024]  #pour question b)
+else: dt = tf / 2**np.arange(2,8)
 
-#nsimul = len(dt)
-nsimul = int(1) #pour question b)
+if question_b :     
+    nsimul = int(1)
+else: nsimul = len(dt) #pour question b)
 
 
 # Exact solution #TODO: Fill
