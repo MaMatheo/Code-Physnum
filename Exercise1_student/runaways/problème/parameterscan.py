@@ -7,7 +7,7 @@ import os
 
 # Parameters
 repertoire = ''
-executable = './engine2.exe' # Change this if your executable has a different name or path, like last week
+executable = './engine.exe' # Change this if your executable has a different name or path, like last week
 input_filename = 'configuration.in.example'
 
 tf = 32
@@ -19,6 +19,7 @@ question_b = False
 question_c = False
 question_d = True
 question_d = False
+question_e = False
 
 
 if question_c:
@@ -27,6 +28,9 @@ if question_c:
 
 if question_b:
     tf=1
+
+if question_e:
+    executable = './engine2.exe'
 
 alpha = 1  # 1 explicit, 0 implicit, 0.5 semi-implicit
 
