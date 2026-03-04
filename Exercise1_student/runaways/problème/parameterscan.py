@@ -14,17 +14,19 @@ tf = 32
 N0 = 0.0
 g = 0.5  # changer ici a -0.2 pour question c)
 d = 0.01
+
 question_b = False
-question_c = True
+question_c = False
 question_d = False
 
 if question_c:
     g = -0.2
+    d=0.0001
 
 if question_b:
     tf=1
 
-alpha = 1/2  # 1 explicit, 0 implicit, 0.5 semi-implicit
+alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
 
 if alpha == 1:
     alphastr = "expl"
@@ -157,7 +159,7 @@ if (question_b):
     plt.plot(t_ref, N_exact_b, 'r--', linewidth=2, label="approximation") 
 if (question_c):
     plt.plot(t_ref, N_exact_c, 'r--', linewidth=2, label="approximation") 
-    
+    plt.axhline(-d/g, color='r', linestyle=':', label="N_inf")
 axs.set_xlabel(r'$\overline{t}$', fontsize=fs)
 axs.set_ylabel(r'$\overline{N}$', fontsize=fs)
 axs.set_xlim(0, tf)
