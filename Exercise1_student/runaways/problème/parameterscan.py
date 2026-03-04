@@ -12,7 +12,7 @@ input_filename = 'configuration.in.example'
 
 tf = 32
 N0 = 0.0
-g = 0.5  # changer ici a -0.2 pour question c)
+g = 0.5  
 d = 0.01
 question_b = False
 question_c = True
@@ -153,7 +153,7 @@ if (question_b):
     plt.plot(t_ref, N_exact_b, 'r--', linewidth=2, label="approximation") 
 if (question_c):
     plt.plot(t_ref, N_exact_c, 'r--', linewidth=2, label="approximation") 
-    plt.axhline(y=d/g), color='r', linestyle='--', label=r"n_\infty")
+    plt.axhline(y=-d/g, color='r', linestyle='--', label=r"n_\infty")
 axs.set_xlabel(r'$\overline{t}$', fontsize=fs)
 axs.set_ylabel(r'$\overline{N}$', fontsize=fs)
 axs.set_xlim(0, tf)
