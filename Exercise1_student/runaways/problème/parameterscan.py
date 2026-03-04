@@ -18,6 +18,8 @@ d = 0.01
 question_b = False
 question_c = False
 question_d = True
+question_d = False
+
 
 if question_c:
     g = -0.2
@@ -30,6 +32,8 @@ alpha = 1  # 1 explicit, 0 implicit, 0.5 semi-implicit
 
 if question_d: # for question d) we only need explicit
     alpha = 1
+
+alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
 
 if alpha == 1:
     alphastr = "expl"
@@ -54,6 +58,7 @@ if question_d:
 elif question_b :
     dt = np.array([tf/1024])  #pour question b)
 else: dt = tf / 2**np.arange(2,8)
+
 
 if question_b :     
     nsimul = int(1)

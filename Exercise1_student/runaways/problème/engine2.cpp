@@ -91,7 +91,7 @@ private:
       {
         double a=-(1-alpha)*dt;
         double b=(1-alpha)*g*dt -1;
-        double c= Nold[0] + (d+alpha*g*Nold[0]-alpha*Nold[0]**2)*dt;
+        double c= Nold[0] + (d+alpha*g*Nold[0]-alpha*Nold[0]*Nold[0])*dt;
         double discriminant = b*b - 4*a*c;
         N = (-b + sqrt(discriminant)) / (2*a); // solution positive de l'equation quadratique
       }
