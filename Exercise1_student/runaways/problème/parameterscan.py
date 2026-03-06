@@ -16,26 +16,29 @@ g = 0.5
 d = 0.01
 
 alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
+question = 'e'
 
-question_b = False
-question_c = False
-question_d = True
-question_d = False
-question_e = False  
 
-if question_b:
+dt = tf / 2**np.arange(2,8)
+
+if question=='b':
     tf=1
+    dt = np.array([tf/1024])
 
-if question_c:
+if question=='c':
     g = -0.2
     d=0.0001
 
-if question_d: # for question d) we only need explicit
+if question=='d': # for question d) we only need explicit
     alpha = 1
+    dt = np.array([tf/16, tf/8, tf/4])
 
-if question_e:
+if question=='e':
     executable = './engine2.exe'
     nsimul = 32
+
+nsimul = len(dt)
+
 
 
 
@@ -57,17 +60,13 @@ os.makedirs(outdir, exist_ok=True)
 print("Saving results in:", outdir)
 # -------------------------------------------------
 
- #TODO: Adjust for your needs
-if question_d:
-    dt = np.array([tf/16, tf/8, tf/4])  # for question d)
-elif question_b :
-    dt = np.array([tf/1024])  #pour question b)
-else: dt = tf / 2**np.arange(2,8)
+#if question_d:
+#    dt = np.array([tf/16, tf/8, tf/4])  # for question d)
+#elif question_b :
+#    dt = np.array([tf/1024])  #pour question b)
+#else: dt = tf / 2**np.arange(2,8)
 
 
-if question_b :     
-    nsimul = int(1)
-else: nsimul = len(dt) #pour question b)
 
 
 # Exact solution #TODO: Fill
@@ -170,9 +169,9 @@ for i in range(nsimul):
 
 
 plt.plot(t_ref, N_exact, 'k--', linewidth=2, label="Exact")
-if (question_b):
+if (question=='b'):
     plt.plot(t_ref, N_exact_b, 'r--', linewidth=2, label="approximation") 
-if (question_c):
+if (question=='c'):
     plt.plot(t_ref, N_exact_c, 'r--', linewidth=2, label="approximation") 
     plt.axhline(-d/g, color='r', linestyle=':', label="N_inf")
 axs.set_xlabel(r'$\overline{t}$', fontsize=fs)
@@ -210,7 +209,7 @@ plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(outdir, f"{figstr}_Nf_conv.png"), dpi=300)
 
-if not ((question_d) or (question_b)): #pour la question d) on n'affiche pas tau
+if not ((question=='d') or (question=='b')): #pour la question d) on n'affiche pas tau
     plt.figure()
     plt.plot(dtlist, tau_list, 'r+-', label="numerical")
     plt.axhline(tau_ref, color='k', linestyle='--', label="Exact")
