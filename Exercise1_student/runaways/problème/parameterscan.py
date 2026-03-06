@@ -19,7 +19,7 @@ question_b = False
 question_c = False
 question_d = True
 question_d = False
-question_e = False
+question_e = False # changer nsimul à 32 
 
 
 if question_c:
