@@ -12,32 +12,33 @@ input_filename = 'configuration.in.example'
 
 tf = 32
 N0 = 0.0
-g = 0.5  # changer ici a -0.2 pour question c)
+g = 0.5  
 d = 0.01
+
+alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
 
 question_b = False
 question_c = False
 question_d = True
 question_d = False
-question_e = False # changer nsimul à 32 
+question_e = False  
 
+if question_b:
+    tf=1
 
 if question_c:
     g = -0.2
     d=0.0001
 
-if question_b:
-    tf=1
-
-if question_e:
-    executable = './engine2.exe'
-
-alpha = 1  # 1 explicit, 0 implicit, 0.5 semi-implicit
-
 if question_d: # for question d) we only need explicit
     alpha = 1
 
-alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
+if question_e:
+    executable = './engine2.exe'
+    nsimul = 32
+
+
+
 
 if alpha == 1:
     alphastr = "expl"
