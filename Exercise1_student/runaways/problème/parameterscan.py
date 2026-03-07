@@ -19,7 +19,7 @@ alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
 question = 'e'
 
 
-dt = tf / 2**np.arange(2,8)
+dt = tf / 2**np.arange(2,8) #sera changé ci-dessous si nécessaire pour les questions b) et d)
 
 if question=='b':
     tf=1
