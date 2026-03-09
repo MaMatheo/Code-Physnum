@@ -15,8 +15,13 @@ N0 = 0.0
 g = 0.5  
 d = 0.01
 
+<<<<<<< Updated upstream
 alpha =  0.5  # 1 explicit, 0 implicit, 0.5 semi-implicit
 question = 'a'
+=======
+alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
+question = 'a' # change this to 'b', 'c', 'd', or 'e' for the different questions, default is 'a'
+>>>>>>> Stashed changes
 
 
 dt = tf / 2**np.arange(2,8) #sera changé ci-dessous si nécessaire pour les questions b) et d)
@@ -55,7 +60,7 @@ figstr = f"runaway_{alphastr}"
 # -------------------------------------------------
 # Create output directory (2 significant digits)
 # -------------------------------------------------
-outdir = f"Outputs_g_{g:.2g}_d_{d:.2g}"
+outdir = f"Outputs_{question}_g_{g:.2g}_d_{d:.2g}"
 os.makedirs(outdir, exist_ok=True)
 print("Saving results in:", outdir)
 # -------------------------------------------------
