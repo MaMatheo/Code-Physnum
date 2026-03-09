@@ -15,8 +15,8 @@ N0 = 0.0
 g = 0.5  
 d = 0.01
 
-alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
-question = 'e'
+alpha =  0.5  # 1 explicit, 0 implicit, 0.5 semi-implicit
+question = 'a'
 
 
 dt = tf / 2**np.arange(2,8) #sera changé ci-dessous si nécessaire pour les questions b) et d)
@@ -59,14 +59,6 @@ outdir = f"Outputs_g_{g:.2g}_d_{d:.2g}"
 os.makedirs(outdir, exist_ok=True)
 print("Saving results in:", outdir)
 # -------------------------------------------------
-
-#if question_d:
-#    dt = np.array([tf/16, tf/8, tf/4])  # for question d)
-#elif question_b :
-#    dt = np.array([tf/1024])  #pour question b)
-#else: dt = tf / 2**np.arange(2,8)
-
-
 
 
 # Exact solution #TODO: Fill
@@ -127,8 +119,8 @@ for i in range(nsimul):
 
 error = np.zeros(nsimul)
 
-lw = 1.5
-fs = 16
+lw = 1.5 # était a 1.5
+fs = 18 # était a 18
 
 fig, axs = plt.subplots(1, 1)
 
@@ -150,7 +142,6 @@ for i in range(nsimul):
         ratio = N / Nfp
         
 
-        #N/Nfp
 
         if ratio[0] <= Nr <= ratio[-1]: # Check if Nr is within the range of ratio for interpolation
             try:
@@ -167,6 +158,14 @@ for i in range(nsimul):
 
     axs.plot(t, N, label=f"dt={param[i]:.2e}", linewidth=lw, alpha=0.7)
 
+plt.rcParams.update({ # pour meilleur lisibilité sur le rapport
+    'font.size': 18,
+    'axes.labelsize': 18,
+    'xtick.labelsize': 11,
+    'ytick.labelsize': 15,
+    'legend.fontsize': 17,
+    'figure.figsize': (6, 5),
+})
 
 plt.plot(t_ref, N_exact, 'k--', linewidth=2, label="Exact")
 if (question=='b'):
@@ -243,3 +242,4 @@ if not ((question=='d') or (question=='b')): #pour la question d) on n'affiche p
     plt.tight_layout() 
     plt.savefig(os.path.join(outdir, f"{figstr}_tau_error_vs_steps.png"), dpi=300) 
 
+print(Nf, tau_ref) # pour vérifier que les valeurs sont correctes
