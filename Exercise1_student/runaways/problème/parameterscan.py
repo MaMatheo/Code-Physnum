@@ -15,7 +15,7 @@ N0 = 0.0
 g = 0.5  
 d = 0.01
 
-alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
+alpha = 0.5  # 1 explicit, 0 implicit, 0.5 semi-implicit
 question = 'a' # change this to 'b', 'c', 'd', or 'e' for the different questions, default is 'a'
 
 
@@ -169,7 +169,7 @@ plt.rcParams.update({ # pour meilleur lisibilité sur le rapport
     'figure.figsize': (6, 5),
 })
 
-plt.plot(t_ref, N_exact, 'k--', linewidth=2, label="Exact")
+plt.plot(t_ref, N_exact, 'k--', linewidth=2, label="Exacte")
 if (question=='b'):
     plt.plot(t_ref, N_exact_b, 'r--', linewidth=2, label="approximation") 
 if (question=='c'):
@@ -188,11 +188,11 @@ plt.savefig(os.path.join(outdir, f"{figstr}_time.png"), dpi=300)
 dtlist = dt
 
 plt.figure()
-plt.loglog(dtlist, error, 'r+-', label="numerical")
+plt.loglog(dtlist, error, 'r+-', label="numérique")
 plt.loglog(dtlist, dtlist/1e6, 'k--', label="O(dt)")
 plt.loglog(dtlist, dtlist**2/1e6, 'k-.', label="O(dt^2)")
 plt.xlabel(r"d$\overline{t}$")
-plt.ylabel("Relative error on Nf")
+plt.ylabel("Erreur relative sur Nf")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
@@ -200,10 +200,10 @@ plt.savefig(os.path.join(outdir, f"{figstr}_Nf_error.png"), dpi=300)
 
 # Convergence plot
 plt.figure()
-plt.plot(dtlist, N_list, 'r+-', label="numerical")
-plt.axhline(Nf, color='k', linestyle='--', label="Exact")
+plt.plot(dtlist, N_list, 'r+-', label="numérique")
+plt.axhline(Nf, color='k', linestyle='--', label="Exacte")
 plt.xlabel(r"d$\overline{t}$")
-plt.ylabel(r"Final $\overline{N}$")
+plt.ylabel(r"$\overline{N}$ Final")
 plt.xscale('log')
 plt.grid(True)
 plt.legend()
@@ -212,10 +212,10 @@ plt.savefig(os.path.join(outdir, f"{figstr}_Nf_conv.png"), dpi=300)
 
 if not ((question=='d') or (question=='b')): #pour la question d) on n'affiche pas tau
     plt.figure()
-    plt.plot(dtlist, tau_list, 'r+-', label="numerical")
-    plt.axhline(tau_ref, color='k', linestyle='--', label="Exact")
+    plt.plot(dtlist, tau_list, 'r+-', label="numérique")
+    plt.axhline(tau_ref, color='k', linestyle='--', label="Exacte")
     plt.xlabel(r"d$\overline{t}$")
-    plt.ylabel(r"Characteristic time $\overline{\tau}$")
+    plt.ylabel(r"Temps caractéristique $\overline{\tau}$")
     plt.xscale('log')
     #plt.ylim(0, tf/10)  # Set y-limits to focus on the relevant range
     plt.grid(True)
@@ -226,11 +226,11 @@ if not ((question=='d') or (question=='b')): #pour la question d) on n'affiche p
     tau_err = np.abs(1 - np.array(tau_list) / tau_ref)
 
     plt.figure()
-    plt.loglog(dtlist, tau_err, 'r+-', label="numerical")
+    plt.loglog(dtlist, tau_err, 'r+-', label="numérique")
     plt.loglog(dtlist, dtlist, 'k--', label="O(dt)")
     plt.loglog(dtlist, dtlist**2, 'k-.', label="O(dt^2)")
     plt.xlabel(r"d$\overline{t}$")
-    plt.ylabel(r"Relative error on $\overline{\tau}$")
+    plt.ylabel(r"Erreur relative sur $\overline{\tau}$")
     plt.legend()
     plt.grid(True)
     plt.tight_layout() 
@@ -238,8 +238,8 @@ if not ((question=='d') or (question=='b')): #pour la question d) on n'affiche p
 
     plt.figure()
     plt.loglog(totalsteps, tau_err, 'r+-', label=f"{alphastr}")
-    plt.xlabel("Total steps")
-    plt.ylabel("Relative error on tau")
+    plt.xlabel("Nombre de pas")
+    plt.ylabel(r"Erreur relative sur $\overline{\tau}$")
     plt.grid(True, which="both", linestyle="--", linewidth=0.5)
     plt.tight_layout() 
     plt.savefig(os.path.join(outdir, f"{figstr}_tau_error_vs_steps.png"), dpi=300) 
