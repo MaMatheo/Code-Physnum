@@ -16,7 +16,7 @@ g = 0.5
 d = 0.01
 
 alpha = 0  # 1 explicit, 0 implicit, 0.5 semi-implicit
-question = 'e'
+question = 'a' # change this to 'b', 'c', 'd', or 'e' for the different questions, default is 'a'
 
 
 dt = tf / 2**np.arange(2,8) #sera changé ci-dessous si nécessaire pour les questions b) et d)
