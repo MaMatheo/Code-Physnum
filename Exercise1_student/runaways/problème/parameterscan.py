@@ -158,6 +158,8 @@ for i in range(nsimul):
 
     axs.plot(t, N, label=f"dt={param[i]:.2e}", linewidth=lw, alpha=0.7)
 
+
+# Pour changer les graphs
 plt.rcParams.update({ # pour meilleur lisibilité sur le rapport
     'font.size': 18,
     'axes.labelsize': 18,
