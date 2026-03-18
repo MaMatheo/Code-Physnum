@@ -27,6 +27,12 @@ input_parameters = {
     'thetadot0': 0.,
     'sampling': 1
 }
+theta0 = input_parameters["theta0"]
+g = input_parameters["g"]
+L = input_parameters["L"]
+tf = input_parameters["tf"]
+N = input_parameters["N"]
+nsteps = input_parameters["nsteps"]
 
 # -------------------------------------------------
 
@@ -94,7 +100,7 @@ os.makedirs(fig_dir, exist_ok=True)
 # Scan files
 # ============================================================
 
-files = sorted(glob.glob(os.path.join(folder, "*.txt")))
+files = sorted(glob.glob(os.path.join(folder,outdir, "*.txt")))
 
 datasets = []
 param_values = []
@@ -163,7 +169,15 @@ cmap = plt.get_cmap("tab10")
 # Plot 1 : theta vs time
 # ============================================================
 
+def sol_anal_a(t_):
+    return theta0*np.cos(np.sqrt(g/L)*t_)
+
+t_ref = np.linspace(0, tf, 1000)
+theta_ref = sol_anal_a(t_ref)
+
 fig, axes = get_axes("theta_time", "Angle vs time")
+
+plt.plot(t_ref, theta_ref, "k--", label="Analytical (small angle)")
 
 for i,data in enumerate(datasets):
 
@@ -172,8 +186,7 @@ for i,data in enumerate(datasets):
 
     color = cmap(i % 10)
 
-    axes[i].plot(t, theta, color=color,
-                 label=f"{param_name}={param_values[i]}")
+    axes[i].plot(t, theta, color=color,label=f"{param_name}={param_values[i]}")
 
     axes[i].set_xlabel("t")
     axes[i].set_ylabel("theta")
@@ -186,3 +199,4 @@ if plot_layout["theta_time"]:
     axes[0].legend()
 
 fig.savefig(os.path.join(fig_dir,"theta_vs_time_all.png"), dpi=300)
+
