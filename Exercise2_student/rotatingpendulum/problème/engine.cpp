@@ -59,8 +59,7 @@ private:
   // TODO definir l'énergie mechanique
   double Emec(double theta, double thetadot, double t_)
   {
-
-      return 0.;
+      return 0.5*m*pow(L*thetadot, 2) + m*g*L*(1-cos(theta));
   }
 
   // TODO definir la puissance des forces non conservatives
@@ -71,9 +70,9 @@ private:
   }
 
   // TODO écrire la fonction pour l'acceleration (theta_doubledot)
-  double compute_acc(double theta, double thetadot, double t)
+  double compute_acc(double theta, double thetadot, double t_)
   {
-      double acc = -g*sin(theta)/L - kappa*(thetadot + r*Omega*cos(Omega*t-theta)/L)/m + r*pow(Omega, 2)*sin(Omega*t-theta)/L;
+      double acc = -g*sin(theta)/L - kappa*(thetadot + r*Omega*cos(Omega*t_-theta)/L)/m + r*pow(Omega, 2)*sin(Omega*t_-theta)/L;
       return acc;
   }
   // TODO implementer le schéma Velocity Verlet pour une accélération dependante du theta, thetadot et t.
