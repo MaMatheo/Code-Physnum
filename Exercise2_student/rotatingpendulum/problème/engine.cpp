@@ -13,7 +13,7 @@ using namespace std; // ouvrir un namespace avec la librerie c++ de base
 */
 class Engine
 {
-private:
+private: 
     // Existing private members of Engine...
   const double pi=3.1415926535897932384626433832795028841971e0;
 
@@ -73,7 +73,8 @@ private:
   // TODO écrire la fonction pour l'acceleration (theta_doubledot)
   double compute_acc(double theta, double thetadot, double t_)
   {
-      double acc = 0.;
+
+      double acc = -g*sin(theta)/L - kappa*(thetadot + r*Omega*cos(Omega*t-theta)/L)/m + r*pow(Omega, 2)*sin(Omega*t-theta)/L;
 
       return acc;
   }
