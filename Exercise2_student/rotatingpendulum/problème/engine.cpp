@@ -71,18 +71,24 @@ private:
   }
 
   // TODO écrire la fonction pour l'acceleration (theta_doubledot)
-  double compute_acc(double theta, double thetadot, double t_)
+  double compute_acc(double theta, double thetadot, double t)
   {
-
       double acc = -g*sin(theta)/L - kappa*(thetadot + r*Omega*cos(Omega*t-theta)/L)/m + r*pow(Omega, 2)*sin(Omega*t-theta)/L;
-
       return acc;
   }
   // TODO implementer le schéma Velocity Verlet pour une accélération dependante du theta, thetadot et t.
-  void step()
+  void step()  // selon les eq. 2.128, 2.129 et 2.132 du poly (car a_2 dépends pas du temps)
   {
+    double acc = compute_acc(theta, thetadot, t); // a(x_j, v_j, t_j)
+    double theta_next = theta + thetadot*dt + 0.5*acc*dt*dt; //x_j+1 = x_j + v_j*dt + 0.5*a(x_j, v_j, t_j)*dt^2
+    double thetadot_half = thetadot + 0.5*acc*dt; // v_j+1/2 = v_j + 0.5*a(x_j, v_j, t_j)*dt
+    double acc_half = compute_acc(theta, thetadot_half, t); // a(x_j, v_j+1/2, t_j)
+    double acc_next = compute_acc(theta_next, thetadot_half, t+dt); // a(x_j+1, v_j+1/2, t_j+1)
+    double thetadot_next = thetadot + 0.5*(acc_half + acc_next)*dt; // v_j+1 = v_j + 0.5*( a(x_j, v_j+1/2, t_j) + a(x_j+1, v_j+1/2, t_j+1) )*dt
 
     t += dt;
+    theta = theta_next;
+    thetadot = thetadot_next;
   }
 
 
