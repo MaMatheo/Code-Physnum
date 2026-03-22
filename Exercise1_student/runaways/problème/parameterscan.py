@@ -15,37 +15,29 @@ N0 = 0.0
 g = 0.5  
 d = 0.01
 
-alpha = 0 # 1 explicit, 0 implicit, 0.5 semi-implicit
-question = 'b' # change this to 'b', 'c', 'd', 'e1' or 'e2' for the different questions, default is 'a'
-#e2 corresponds to running the new engine with the same parameters as in e1, so as to print the obtained value of tau
-#e1 corresponds to running the old engine with different values of the tolerance, to check the convergence of tau towards that obtained in e2
+alpha = 0.5  # 1 explicit, 0 implicit, 0.5 semi-implicit
+question = 'a' # change this to 'b', 'c', 'd', or 'e' for the different questions, default is 'a'
 
-dt = tf / 2**np.arange(6,12) #sera changé ci-dessous si nécessaire pour les questions b) et d)
+
+dt = tf / 2**np.arange(2,8) #sera changé ci-dessous si nécessaire pour les questions b) et d)
 
 if question=='b':
-    tf=0.1
+    tf=1
     dt = np.array([tf/1024])
 
 if question=='c':
     g = -0.2
     d=0.0001
-    n_inf = -d/g
-    dt = np.array([tf/2**8])
 
 if question=='d': # for question d) we only need explicit
     alpha = 1
     dt = np.array([tf/16, tf/8, tf/4])
 
-if question=='e1':
-    dt = np.array([tf/32])
-    tol_array = np.array([1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8])
-    nsimul = len(tol_array)
-elif question =='e2':
+if question=='e':
     executable = './engine2.exe'
-    dt = np.array([tf/32])
-    nsimul = len(dt)
-else:
-    nsimul = len(dt)
+    nsimul = 32
+
+nsimul = len(dt)
 
 
 
@@ -93,18 +85,13 @@ N_exact =  N_analyt(t_ref)# exact solution as function of time
 N_exact_b =  N_analyt_b(t_ref) #pour la question b)
 N_exact_c = N_analyt_c(t_ref) #pour la question c)
 
-
 ratio_exact = N_exact / Nfp
 #TODO: calculate tau_ref as the time when ratio_exact crosses Nr, using interpolation
 cs = CubicSpline(ratio_exact, t_ref) #or tau_ref = np.interp(0.2, ratio_exact, t_ref) #pas sur que ca marche ca
 tau_ref = cs(Nr)
 
-if question == 'e1':
-    paramstr = 'tol'
-    param = tol_array
-else:
-    paramstr = 'dt'
-    param = dt
+paramstr = 'dt'
+param = dt
 
 # Simulations
 outputs = []
@@ -113,40 +100,24 @@ tau_list = []
 N_list = []
 error = np.zeros(nsimul)
 
+for i in range(nsimul):
+    dt_val = param[i]  # current dt
 
-if question=='e1':
-    for i in range(nsimul):
-        tol_val = param[i]  # current dt
-        output_file = f"{alphastr}_tol={tol_val:.15g}.out"
-        output_path = os.path.join(outdir, output_file)
-        outputs.append(output_path)
-         # Almost all parameters are passed as command line arguments, but you can also use an input file if you prefer. Adjust the command below accordingly.
-        cmd = (
-            f"{repertoire}{executable} {input_filename} "
-            f"{paramstr}={tol_val:.15g} output={output_path} "
-            f" alpha={alpha:.2g} tf={tf:.3f} N0={N0:.3f} g={g:.4f} d={d:.4f}"
-        )
-        print(cmd)
-        subprocess.run(cmd, shell=True)
-        print('Done.')
-else:
-    for i in range(nsimul):
-        dt_val = param[i]  # current dt
+    output_file = f"{alphastr}_dt={dt_val:.15g}.out"
+    output_path = os.path.join(outdir, output_file)
+    outputs.append(output_path)
+    # Almost all parameters are passed as command line arguments, but you can also use an input file if you prefer. Adjust the command below accordingly.
+    cmd = (
+        f"{repertoire}{executable} {input_filename} "
+        f"{paramstr}={dt_val:.15g} output={output_path} "
+        f" alpha={alpha:.2g} tf={tf:.3f} N0={N0:.3f} g={g:.4f} d={d:.4f}"
+    )
 
-        output_file = f"{alphastr}_dt={dt_val:.15g}.out"
-        output_path = os.path.join(outdir, output_file)
-        outputs.append(output_path)
-        # Almost all parameters are passed as command line arguments, but you can also use an input file if you prefer. Adjust the command below accordingly.
-        cmd = (
-            f"{repertoire}{executable} {input_filename} "
-            f"{paramstr}={dt_val:.15g} output={output_path} "
-            f" alpha={alpha:.2g} tf={tf:.3f} N0={N0:.3f} g={g:.4f} d={d:.4f}"
-        )
+    print(cmd)
+    subprocess.run(cmd, shell=True)
+    print('Done.')
 
-        print(cmd)
-        subprocess.run(cmd, shell=True)
-        print('Done.')
-
+error = np.zeros(nsimul)
 
 lw = 1.5 # était a 1.5
 fs = 18 # était a 18
@@ -181,19 +152,11 @@ for i in range(nsimul):
         else:
             tau = np.nan
 
-
         tau_list.append(tau)
 
-    if question == 'c': 
-        error[i] = abs(NN - n_inf) / abs(n_inf)
-    else:
-        error[i] = abs(NN - Nf) / abs(Nf) # relative error on Nf 
-    if question == 'e1':
-        axs.plot(t, N, label=f"simulation pour tol={param[i]:.2e}", linewidth=lw, alpha=0.7)
-    else:
-        axs.plot(t, N, label=f"simulation pour dt={param[i]:.2e}", linewidth=lw, alpha=0.7)
+        error[i] = abs(NN - Nf) / abs(Nf) #TODO: calculate relative error on Nf and store in error[i]
 
-
+    axs.plot(t, N, label=f"dt={param[i]:.2e}", linewidth=lw, alpha=0.7)
 
 
 # Pour changer les graphs
@@ -206,12 +169,12 @@ plt.rcParams.update({ # pour meilleur lisibilité sur le rapport
     'figure.figsize': (6, 5),
 })
 
-plt.plot(t_ref, N_exact, 'k--', linewidth=2, label="Exact")
+plt.plot(t_ref, N_exact, 'k--', linewidth=2, label="Exacte")
 if (question=='b'):
     plt.plot(t_ref, N_exact_b, 'r--', linewidth=2, label="approximation") 
 if (question=='c'):
-    plt.plot(t_ref, N_exact_c, 'r:', linewidth=2, label="approximation") 
-    plt.axhline(n_inf, color='r', linestyle=':', label="N_inf")
+    plt.plot(t_ref, N_exact_c, 'r--', linewidth=2, label="approximation") 
+    plt.axhline(-d/g, color='r', linestyle=':', label="N_inf")
 axs.set_xlabel(r'$\overline{t}$', fontsize=fs)
 axs.set_ylabel(r'$\overline{N}$', fontsize=fs)
 axs.set_xlim(0, tf)
@@ -221,93 +184,53 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig(os.path.join(outdir, f"{figstr}_time.png"), dpi=300)
 
-
-#graphe d'erreur relative de la simulation vs solution exacte OU approximée en fonction du temps
-if question == 'b':  
-    N_exact_again = N_analyt(t) #si fait avec t_ref la comparaison avec la simulation est trop compliquée
-    N_approx = N_analyt_b(t) # idem
-    plt.figure()
-    N_ = N 
-    plt.plot(b*t, 100*np.abs(N_-N_exact_again)/N_exact_again, label=f"solution exacte ", linewidth=lw, alpha=0.7)
-    plt.plot(b*t, 100*np.abs(N_-N_approx)/N_approx, label=f"solution approximée", linewidth=lw, alpha=0.7)
-    plt.xlabel(r'$\beta \overline{t}$', fontsize=fs)
-    plt.ylabel(r'erreur relative de $\overline{N}$[%]', fontsize=fs)
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(outdir, f"{figstr}_error.png"), dpi=300)
-
-if question == 'c':  
-    N_exact_again = N_analyt(t) #si fait avec t_ref la comparaison avec la simulation est trop compliquée
-    N_approx = N_analyt_c(t) # idem
-    plt.figure()
-
-    plt.plot(t, 100*np.abs(N-N_exact_again)/N_exact_again, label=f"solution exacte ", linewidth=lw, alpha=0.7)
-    plt.plot(t, 100*np.abs(N-N_approx)/N_approx, label=f"solution approximée", linewidth=lw, alpha=0.7)
-    plt.xlabel(r'$\overline{t}$', fontsize=fs)
-    plt.ylabel(r'erreur relative de $\overline{N}$[%]', fontsize=fs)
-    plt.legend(fontsize=14)
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(outdir, f"{figstr}_error.png"), dpi=300)
-
-
-
 # Error vs dt
 dtlist = dt
 
-if question == 'a' or question == 'd':
-    plt.figure()
-    plt.loglog(dtlist, error, 'r+-', label="numerical")
-    plt.loglog(dtlist, dtlist/1e6, 'k--', label="O(dt)")
-    plt.loglog(dtlist, dtlist**2/1e6, 'k-.', label="O(dt^2)")
-    plt.xlabel(r"d$\overline{t}$")
-    if question == 'c':
-        plt.ylabel(r"Relative error on $n_\infty$")
-    else:  
-        plt.ylabel("Relative error on Nf")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(outdir, f"{figstr}_Nf_error.png"), dpi=300)
+plt.figure()
+plt.loglog(dtlist, error, 'r+-', label="numérique")
+plt.loglog(dtlist, dtlist/1e6, 'k--', label="O(dt)")
+plt.loglog(dtlist, dtlist**2/1e6, 'k-.', label="O(dt^2)")
+plt.xlabel(r"d$\overline{t}$")
+plt.ylabel("Erreur relative sur Nf")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(os.path.join(outdir, f"{figstr}_Nf_error.png"), dpi=300)
 
 # Convergence plot
-if question == 'a' or question == 'd':
+plt.figure()
+plt.plot(dtlist, N_list, 'r+-', label="numérique")
+plt.axhline(Nf, color='k', linestyle='--', label="Exacte")
+plt.xlabel(r"d$\overline{t}$")
+plt.ylabel(r"$\overline{N}$ Final")
+plt.xscale('log')
+plt.grid(True)
+plt.legend()
+plt.tight_layout()
+plt.savefig(os.path.join(outdir, f"{figstr}_Nf_conv.png"), dpi=300)
+
+if not ((question=='d') or (question=='b')): #pour la question d) on n'affiche pas tau
     plt.figure()
-    plt.plot(dtlist, N_list, 'r+-', label="numerical")
-    if question == 'c':
-        plt.axhline(n_inf, color='k', linestyle='--', label=" N_inf")
-    else:
-        plt.axhline(Nf, color='k', linestyle='--', label="Exact")
+    plt.plot(dtlist, tau_list, 'r+-', label="numérique")
+    plt.axhline(tau_ref, color='k', linestyle='--', label="Exacte")
     plt.xlabel(r"d$\overline{t}$")
-    plt.ylabel(r"Final $\overline{N}$")
-    plt.xscale('log')
-    plt.grid(True)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(os.path.join(outdir, f"{figstr}_Nf_conv.png"), dpi=300)
-    
-if question == 'a':
-    plt.figure()
-    plt.plot(dtlist, tau_list, 'r+-', label="numerical")
-    plt.axhline(tau_ref, color='k', linestyle='--', label="Exact")
-    plt.xlabel(r"d$\overline{t}$")
-    plt.ylabel(r"Characteristic time $\overline{\tau}$")
+    plt.ylabel(r"Temps caractéristique $\overline{\tau}$")
     plt.xscale('log')
     #plt.ylim(0, tf/10)  # Set y-limits to focus on the relevant range
     plt.grid(True)
-    plt.legend(fontsize=10)
+    plt.legend()
     plt.tight_layout() 
     plt.savefig(os.path.join(outdir, f"{figstr}_tau.png"), dpi=300)
 
     tau_err = np.abs(1 - np.array(tau_list) / tau_ref)
 
     plt.figure()
-    plt.loglog(dtlist, tau_err, 'r+-', label="numerical")
+    plt.loglog(dtlist, tau_err, 'r+-', label="numérique")
     plt.loglog(dtlist, dtlist, 'k--', label="O(dt)")
     plt.loglog(dtlist, dtlist**2, 'k-.', label="O(dt^2)")
     plt.xlabel(r"d$\overline{t}$")
-    plt.ylabel(r"Relative error on $\overline{\tau}$")
+    plt.ylabel(r"Erreur relative sur $\overline{\tau}$")
     plt.legend()
     plt.grid(True)
     plt.tight_layout() 
@@ -315,29 +238,10 @@ if question == 'a':
 
     plt.figure()
     plt.loglog(totalsteps, tau_err, 'r+-', label=f"{alphastr}")
-    plt.xlabel("Total steps")
-    plt.ylabel("Relative error on tau")
+    plt.xlabel("Nombre de pas")
+    plt.ylabel(r"Erreur relative sur $\overline{\tau}$")
     plt.grid(True, which="both", linestyle="--", linewidth=0.5)
     plt.tight_layout() 
     plt.savefig(os.path.join(outdir, f"{figstr}_tau_error_vs_steps.png"), dpi=300) 
 
 print(Nf, tau_ref) # pour vérifier que les valeurs sont correctes
-
-if question == 'e1':
-    tau2_impl = 2.99508315 #obtenus en lancant e2
-    tau2_semi = 3.81895847
-    plt.figure()
-    plt.plot(tol_array, tau_list, 'r+-', label="processus itératif")
-    #plt.axhline(tau_ref, color='k', linestyle='--', label="Exact")
-    plt.axhline(tau2_impl, color='k', linestyle='--', label="processus analytique")
-    plt.xlabel(r"tolérance")
-    plt.ylabel(r" $\overline{\tau}$")
-    plt.xscale('log')
-    #plt.ylim(0, tf/10)  # Set y-limits to focus on the relevant range
-    plt.grid(True)
-    plt.legend()
-    plt.tight_layout() 
-    plt.savefig(os.path.join(outdir, f"{figstr}_tau.png"), dpi=300)
-
-if question == 'e2':
-    print(f"{tau_list=}")
