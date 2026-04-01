@@ -2,38 +2,49 @@
 #include <fstream>        // input output file stream class
 #include <cmath>          // librerie mathematique de base
 #include <iomanip>        // input output manipulators
-#include "/Users/tim/Documents/GitHub/Code-Physnum/Exercise2_student/common/ConfigFile.h" // Il contient les methodes pour lire inputs et ecrire outputs 
+#include <valarray>       // valarray functions
+#include "/Users/tim/Documents/GitHub/Code-Physnum/Exercise3_student/common/ConfigFile.h" // Il contient les methodes pour lire inputs et ecrire outputs 
 #include <numeric>
 
 using namespace std; // ouvrir un namespace avec la librerie c++ de base
 
-/* La class Engine est le moteur principale de ce code. Il contient 
+/* La class Exercice4 est le moteur principale de ce code. Il contient 
    les methodes de base pour lire / initialiser les inputs, 
    preparer les outputs et calculer les donnees necessaires
 */
-class Engine
+class Exercice4
 {
 private: 
-    // Existing private members of Engine...
+    // Existing private members of Exercice4...
   const double pi=3.1415926535897932384626433832795028841971e0;
 
   // definition des variables
+  const size_t numBodies=3; // Nombre de corps (<=3)
+  const double rho0, G, S, Cx, R_T, m_A, d, h, m_T, m_L;
 
-  double g, m, L, Omega, r, kappa;         // accélération gravitationnelle, masse, longueur, fréquence angulaire, rayon, coefficient de frottement
+  valarray<double> y = valarray<double>(0.e0, 4*numBodies);
+  // y = ({x_i,y_i}_{i=1,2,3}, {vx_i,vy_i}_{i=1,2,3})
 
-
-  double theta;
-  double thetadot; 
 
   double t;  // Temps courant pas de temps
   double tf;          // Temps final
   double dt;      // Intervalle de temps
-  int N_excit;  // Nombre de périodes d'excitation
+  int N_excit;  // Nombre de périodes d'excitation --changer à "révolution"?
   int nsteps_per; // Nombre de pas de temps par période d'excitation
 
   unsigned int sampling;  // Nombre de pas de temps entre chaque ecriture des diagnostics
   unsigned int last;       // Nombre de pas de temps depuis la derniere ecriture des diagnostics
   ofstream *outputFile;    // Pointeur vers le fichier de sortie
+
+  //fonctions pour acceder à l'indice de chaque variable dans le tableau y
+  size_t ix(size_t i) const { return 2 * i; }
+  size_t iy(size_t i) const { return 2 * i + 1; }
+  size_t ivx(size_t i) const { return 2 * numBodies + 2 * i; }
+  size_t ivy(size_t i) const { return 2 * numBodies + 2 * i + 1; }
+  // Artemis[i=0], Terre[i=1], Lune[i=2]
+
+
+
 
   /* Calculer et ecrire les diagnostics dans un fichier
      inputs:
@@ -69,30 +80,24 @@ private:
   }
 
   // TODO écrire la fonction pour l'acceleration (theta_doubledot)
-  double compute_acc(double theta, double thetadot, double t_)
+  double acceleration(valarray<double> y)
   {
-      double acc = -g*sin(theta)/L - kappa*(thetadot + r*Omega*cos(Omega*t_-theta)/L)/m + r*pow(Omega, 2)*sin(Omega*t_-theta)/L;
-      return acc;
+    return bite;
   }
   // TODO implementer le schéma Velocity Verlet pour une accélération dependante du theta, thetadot et t.
-  void step()  // selon les eq. 2.128, 2.129 et 2.132 du poly (car a_2 dépends pas du temps)
+  valarray<double> rk4Step(double step, const valarray<double>& y)
   {
-    double acc = compute_acc(theta, thetadot, t); // a(x_j, v_j, t_j)
-    double theta_next = theta + thetadot*dt + 0.5*acc*dt*dt; //x_j+1 = x_j + v_j*dt + 0.5*a(x_j, v_j, t_j)*dt^2
-    double thetadot_half = thetadot + 0.5*acc*dt; // v_j+1/2 = v_j + 0.5*a(x_j, v_j, t_j)*dt
-    double acc_half = compute_acc(theta, thetadot_half, t); // a(x_j, v_j+1/2, t_j)
-    double acc_next = compute_acc(theta_next, thetadot_half, t+dt); // a(x_j+1, v_j+1/2, t_j+1)
-    double thetadot_next = thetadot + 0.5*(acc_half + acc_next)*dt; // v_j+1 = v_j + 0.5*( a(x_j, v_j+1/2, t_j) + a(x_j+1, v_j+1/2, t_j+1) )*dt
-
-    t += dt;
-    theta = theta_next;
-    thetadot = thetadot_next;
+    valarray<double> k1 = acceleration(y);
+    valarray<double> k2 = acceleration(y + 0.5 * k1);
+    valarray<double> k3 = acceleration(y + 0.5 * k2);
+    valarray<double> k4 = acceleration(y + k3);
+    return y + (k1 + 2*k2 + 2*k3 + k4)*step/6.0;
   }
 
 
 public:
     // Modified constructor
-    Engine(ConfigFile configFile)
+    Exercice4(ConfigFile configFile)
     {
       // Stockage des parametres de simulation dans les attributs de la classe
       tf     = configFile.get<double>("tf",tf);	        // t final (overwritten if N_excit >0)
@@ -123,7 +128,7 @@ public:
 
 
     // Destructeur virtuel
-    virtual ~Engine()
+    virtual ~Exercice4()
     {
       outputFile->close();
       delete outputFile;
@@ -158,10 +163,10 @@ int main(int argc, char* argv[])
   for(int i(2); i<argc; ++i) // Input complementaires ("./Exercice2 config_perso.in input_scan=[valeur]")
       configFile.process(argv[i]);
 
-  Engine* engine;
+      Exercice4* engine;
 
-  // Create an instance of Engine instead of EngineEuler
-  engine = new Engine(configFile);
+  // Create an instance of Exercice4 
+  engine = new Exercice4(configFile);
 
   engine->run(); // executer la simulation
 
