@@ -19,14 +19,19 @@ input_parameters = {
     'N': 10000, # number of excitation periods
     'nsteps': 100, # number of time steps per period (if N>0), number of timesteps total if N=0
     'r': 0.15,
-    'kappa': 0.02,
-    'm': 0.1,
-    'L': 0.2,
+    'rho0': 0.,
+    'mA': 8500,
+    'mT': 5.972e24,
+    'mL': 7.3477e22,
+    'R_0' : 314159*1000,
+    'R_terre': 6378.1*1000,
+    'd' : 5.02,
     'g': 9.81,
     'Omega': np.sqrt(9.81/0.2),
-    'theta0': 0.9,
-    'thetadot0': 0.5,
-    'sampling': 100,
+    'alpha0': 0.,
+    'v0': 1.2,
+    'h' : 10*1000,
+    'sampling': 1,
 }
 theta0 = input_parameters["theta0"]
 g = input_parameters["g"]
