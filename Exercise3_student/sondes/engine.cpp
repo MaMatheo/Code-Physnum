@@ -20,7 +20,14 @@ private:
 
   // definition des variables
   const size_t numBodies=3; // Nombre de corps (<=3)
-  const double rho0, G, S, Cx, R_T, m_A, d, h, m_T, m_L;
+  //const valarray<bool> fixe_indices = {true, true, true}; // Indique si les corps evoluent ou sont fixes (ex: Terre fixe => fixe_indices[1]=true)
+
+  // constantes physiques et parametres de simulation
+  const double rho0, G, Cx, lambda, R_T, m_A, d, h, m_T, m_L, dt_fixe; 
+  const double S = pi*5.02*5.02; // section efficace de la sonde; à calculer dans python?
+  const valarray<double> m = {m_A, m_T, m_L}; // masses des corps
+  double Omega = sqrt(G*m[1]*m[2]/pow(d,3)); // frequence angulaire de rotation du repère
+
 
   valarray<double> y = valarray<double>(0.e0, 4*numBodies);
   // y = ({x_i,y_i}_{i=1,2,3}, {vx_i,vy_i}_{i=1,2,3})
@@ -44,6 +51,7 @@ private:
   // Artemis[i=0], Terre[i=1], Lune[i=2]
 
 
+ // ECRITURE DES DONNéES
 
 
   /* Calculer et ecrire les diagnostics dans un fichier
@@ -56,9 +64,13 @@ private:
     // Ecriture tous les [sampling] pas de temps, sauf si write est vrai
     if((!write && last>=sampling) || (write && last!=1))
     {
-      double emec = Emec(theta, thetadot, t); // TODO: Evaluer l'energie mecanique
-      double pnc = Pnonc(theta, thetadot, t); // TODO: Evaluer la puissance des forces non conservatives
-      *outputFile << t << " " << theta << " " << thetadot << " " << emec << " " << pnc << endl;
+      double emec = Emec(y); 
+      double momentum = Momentum(y); 
+      
+      *outputFile << t << " ";
+      for (size_t i = 0; i < y.size(); ++i) {*outputFile << y[i] << " ";}
+      *outputFile << emec << " " << momentum << endl;
+      // printer l'accélération? -> q.3.3
       last = 1;
     }
     else
@@ -67,24 +79,119 @@ private:
     }
   }
 
+
+  // CALCULS DES ENERGIES
+
+
   // TODO definir l'énergie mechanique
-  double Emec(double theta, double thetadot, double t_)
+  double Emec(const valarray<double>& y)
   {
-      return 0.5*m*pow(L*thetadot, 2) + m*g*L*(1-cos(theta));
+    double energie_cinetique = 0.;
+    double energie_potentielle = 0.;
+    for(size_t i = 0; i < numBodies; ++i)
+    {
+      energie_cinetique += 0.5*m[i]*(pow(y[ivx(i)],2)+pow(y[ivy(i)],2))
+      energie_potentielle += -G*sum_{j!=i} m[i]*m[j]/sqrt(pow(y[ix(i)]-y[ix(j)],2)+pow(y[iy(i)]-y[iy(j)],2))
+    }
+    return energie_cinetique + energie_potentielle;
   }
 
-  // TODO definir la puissance des forces non conservatives
-  double Pnonc(double theta, double thetadot, double t_)
+  // TODO definir la qtté de mvmt du systême
+  double Momentum(const valarray<double>& y)
+{
+    valarray<double> sum = valarray<double>(0.e0, 2); //momentum total du systeme
+    for(size_t i = 0; i < numBodies; ++i)
+    {
+        double vx = y[ivx(i)];
+        double vy = y[ivy(i)];
+        valarray<double> v = {vx,vy};};
+        sum += m[i] * v;
+    }
+    return sum;
+}
+
+  // CALCULS DES FORCES
+
+
+  //force gravitationnelle exercée par A sur B; retourne vecteur 2D
+  valarray<double> F_grav_indice(size_t A, size_t B, const valarray<double>& y)  
   {
-    return  -kappa*pow(L*thetadot, 2) - kappa*r*Omega*L*thetadot*cos(Omega*t_-theta) + r*pow(Omega, 2)*L*thetadot*sin(Omega*t_-theta);
+    valarray<double> r = {y[ix(A)] - y[ix(B)], y[iy(A)] - y[iy(B)]}; //vecteur AB
+    double r_norm = sqrt(pow(r[0], 2) + pow(r[1], 2)); // norme du vecteur AB
+    valarray<double> F = (-G * m[0] * m[1] / pow(r_norm,3))*r; //force gravitationnelle exercée par A sur B
+    return F; 
   }
 
-  // TODO écrire la fonction pour l'acceleration (theta_doubledot)
-  double acceleration(valarray<double> y)
+  // fonction rho 
+  double rho(double r)
   {
-    return bite;
+    return rho0*exp(-(r-R_T)/lambda);
   }
-  // TODO implementer le schéma Velocity Verlet pour une accélération dependante du theta, thetadot et t.
+
+  // force de frottements atmosphériques; retourne vecteur 12D
+  valarray<double> F_frottement(const valarray<double>& y) // appliqué uniquement par la Terre sur Artemis
+  {
+    double r_norme = sqrt( pow(y[ix(0)]-y[ix(1)],2) + pow(y[ix(0)]-y[ix(1)],2) ); //norme de la position relative de Artemis /rap à la Terre
+    valarray<double> v = {y[ivx(0)]-y[ivx(1)], y[ivy(0)]-y[ivy(1)]}; //vitesse relative "-"
+    double v_norm = sqrt(pow(v[0], 2) + pow(v[1], 2)); // norme de la vitesse relative "-"
+    valarray<double> F = valarray<double>(0.e0, 4*numBodies); //force appliquée en format vectoriel
+    // utiliser slice pour optimiser le code:
+    F[ivx(0)]=-0.5*rho(r)*S*Cx*v[0]*v_norm; // force de frottement atmosphérique en x
+    F[ivy(0)]=-0.5*rho(r)*S*Cx*v[1]*v_norm; // force de frottement atmosphérique en y
+    return F;
+  }
+
+  // force centrifuge
+  valarray<double> F_centrifuge(const valarray<double>& y) // appliqué uniquement par la Terre sur Artemis
+  {
+    valarray<double> F = valarray<double>(0.e0, 4*numBodies); //force appliquée en format vectoriel
+    
+    for(size_t i = 0; i < numBodies; ++i)
+    {
+      valarray<double> r = {y[ix(i)],y[ix(i)]}; // position du corps
+      //useless?:double r_norm = sqrt(pow(r[0], 2) + pow(r[1], 2)); // norme de la position du corps
+      //maths A VERIFIER; utiliser slice pour optimiser le code:
+      F[ivx(i)]=m[i]*pow(Omega,2)*r[0]// force centrifuge en x
+      F[ivy(i)]=m[i]*pow(Omega,2)*r[1]; // force centrifuge en y
+    }
+    return F;
+  }
+
+
+  // FONCTION ACCELERATION
+
+
+  valarray<double> acceleration(const valarray<double>& y)
+  {
+    valarray<double> acc = valarray<double>(0.e0, 4*numBodies);
+    valarray<double> F_frot= F_frottement(y) //uniquement appliquée par la Terre sur Artemis
+    valarray<double> F_cent= F_centrifuge(y)
+
+    for(size_t i=0; i<numBodies; ++i) 
+    {
+      // update les positions à partir des vitesses; utiliser slice pour optimiser le code:
+      acc[ix(i)]=y[ivx(i)];
+      acc[iy(i)]=y[ivy(i)];
+
+      // update les vitesses à partir des forces
+      valarray<double> F_grav_total(0.0, 4*numBodies); //force gravitationnelle totale exercée sur le corps i
+
+      for(size_t j = 0; j < numBodies; ++j)
+      {
+          if(j != i)
+          {
+              F_grav_total[ivx(i)] += F_grav_indice(j, i, y)[0];
+              F_grav_total[ivy(i)] += F_grav_indice(j, i, y)[1];
+          }
+      }      
+      valarray<double> F_total = F_grav_total + F_frot + F_cent; // somme des forces 
+      //utiliser slice pour optimiser le code:
+      acc[ivx(i)] = F_total[ivx(i)]/m[i];
+      acc[ivy(i)] = F_total[ivy(i)]/m[i];
+    }
+    return acc;
+  }
+ 
   valarray<double> rk4Step(double step, const valarray<double>& y)
   {
     valarray<double> k1 = acceleration(y);
@@ -99,7 +206,8 @@ public:
     // Modified constructor
     Exercice4(ConfigFile configFile)
     {
-      // Stockage des parametres de simulation dans les attributs de la classe
+      // Stockage des parametres de simulation dans les attributs de la classe:
+      // A CHANGER à partir de l.25/26 et harmoniser avec le python
       tf     = configFile.get<double>("tf",tf);	        // t final (overwritten if N_excit >0)
       g     = configFile.get<double>("g", g);         // lire l'acceleration de gravite
       m     = configFile.get<double>("m", m);         // lire la masse
@@ -114,9 +222,12 @@ public:
       nsteps_per= configFile.get<int>("nsteps");        // number of time step per period
       sampling = configFile.get<unsigned int>("sampling",sampling); // lire le nombre de pas de temps entre chaque ecriture des diagnostics
 
+
       // Ouverture du fichier de sortie
       outputFile = new ofstream(configFile.get<string>("output").c_str());
       outputFile->precision(15);
+      
+      // ?????
       if(N_excit>0){
         tf = N_excit*(2*pi/Omega);
         dt   = (2*pi/Omega)/nsteps_per;
@@ -133,7 +244,8 @@ public:
       outputFile->close();
       delete outputFile;
     };
-      // Simulation complete
+    
+    // Simulation complete
     void run()
     {
       t = 0.;
@@ -142,7 +254,9 @@ public:
 
       while( t < tf-0.5*dt )
       {
-        step();
+        //CheckCollisions();
+        //implémenter dt variable
+        y=rk4step(dt_fixe, y);
         printOut(false);
       }
       printOut(true);
