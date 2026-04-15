@@ -23,13 +23,19 @@ private:
   //const valarray<bool> fixe_indices = {true, true, true}; // Indique si les corps evoluent ou sont fixes (ex: Terre fixe => fixe_indices[1]=true)
 
   // constantes physiques et parametres de simulation
-  const double rho0, G, Cx, lambda, R_T, m_A, d, h, m_T, m_L, dt_fixe; 
-  const double S = pi*5.02*5.02; // section efficace de la sonde; à calculer dans python?
-  const valarray<double> m = {m_A, m_T, m_L}; // masses des corps
+  bool dt_variable;
+  bool checkcoll=false;
+  double xA0, yA0, xT0, yT0, xL0, yL0; // positions initiales
+  double vxA0, vyA0, vxT0, vyT0, vxL0, vyL0; // vitesses initiales
+  double rho0, Cx, lambda, R_A, R_T, R_L, m_A, d, h, m_T, m_L, dt0, epsilon,s; 
+  const double G = 6.67430e-11; // constante de gravitation universelle
+  const double S = pi*R_A*R_A; // section efficace de la sonde; à calculer dans python?
+  valarray<double> m = {m_A, m_T, m_L}; // masses des corps
+  valarray<double> R = {R_A, R_T, R_L}; // rayons des corps
   double Omega = sqrt(G*m[1]*m[2]/pow(d,3)); // frequence angulaire de rotation du repère
 
 
-  valarray<double> y = valarray<double>(0.e0, 4*numBodies);
+  valarray<double> y = {xA0, yA0, xT0, yT0, xL0, yL0, vxA0, vyA0, vxT0, vyT0, vxL0, vyL0};
   // y = ({x_i,y_i}_{i=1,2,3}, {vx_i,vy_i}_{i=1,2,3})
 
 
@@ -37,7 +43,6 @@ private:
   double tf;          // Temps final
   double dt;      // Intervalle de temps
   int N_excit;  // Nombre de périodes d'excitation --changer à "révolution"?
-  int nsteps_per; // Nombre de pas de temps par période d'excitation
 
   unsigned int sampling;  // Nombre de pas de temps entre chaque ecriture des diagnostics
   unsigned int last;       // Nombre de pas de temps depuis la derniere ecriture des diagnostics
@@ -65,11 +70,11 @@ private:
     if((!write && last>=sampling) || (write && last!=1))
     {
       double emec = Emec(y); 
-      double momentum = Momentum(y); 
+      valarray<double> momentum = Momentum(y); 
       
       *outputFile << t << " ";
       for (size_t i = 0; i < y.size(); ++i) {*outputFile << y[i] << " ";}
-      *outputFile << emec << " " << momentum << endl;
+      *outputFile << emec << " " << momentum[0] << momentum[1] << checkcoll << endl;
       // printer l'accélération? -> q.3.3
       last = 1;
     }
@@ -83,32 +88,36 @@ private:
   // CALCULS DES ENERGIES
 
 
-  // TODO definir l'énergie mechanique
+  // definir l'énergie mechanique
   double Emec(const valarray<double>& y)
   {
     double energie_cinetique = 0.;
     double energie_potentielle = 0.;
     for(size_t i = 0; i < numBodies; ++i)
     {
-      energie_cinetique += 0.5*m[i]*(pow(y[ivx(i)],2)+pow(y[ivy(i)],2))
-      energie_potentielle += -G*sum_{j!=i} m[i]*m[j]/sqrt(pow(y[ix(i)]-y[ix(j)],2)+pow(y[iy(i)]-y[iy(j)],2))
+      energie_cinetique += 0.5*m[i]*(pow(y[ivx(i)],2)+pow(y[ivy(i)],2));
+      for(size_t j = 0; j < numBodies; ++j)
+      {
+        if(j!=i){energie_potentielle += -G*m[i]*m[j]/sqrt(pow(y[ix(i)]-y[ix(j)],2)+pow(y[iy(i)]-y[iy(j)],2));}
+      }
     }
+    
     return energie_cinetique + energie_potentielle;
   }
 
-  // TODO definir la qtté de mvmt du systême
-  double Momentum(const valarray<double>& y)
-{
+  // definir la qtté de mvmt du systême
+  valarray<double> Momentum(const valarray<double>& y)
+  {
     valarray<double> sum = valarray<double>(0.e0, 2); //momentum total du systeme
     for(size_t i = 0; i < numBodies; ++i)
     {
         double vx = y[ivx(i)];
         double vy = y[ivy(i)];
-        valarray<double> v = {vx,vy};};
+        valarray<double> v = {vx,vy};;
         sum += m[i] * v;
     }
     return sum;
-}
+  }
 
   // CALCULS DES FORCES
 
@@ -136,8 +145,8 @@ private:
     double v_norm = sqrt(pow(v[0], 2) + pow(v[1], 2)); // norme de la vitesse relative "-"
     valarray<double> F = valarray<double>(0.e0, 4*numBodies); //force appliquée en format vectoriel
     // utiliser slice pour optimiser le code:
-    F[ivx(0)]=-0.5*rho(r)*S*Cx*v[0]*v_norm; // force de frottement atmosphérique en x
-    F[ivy(0)]=-0.5*rho(r)*S*Cx*v[1]*v_norm; // force de frottement atmosphérique en y
+    F[ivx(0)]=-0.5*rho(r_norme)*S*Cx*v[0]*v_norm; // force de frottement atmosphérique en x
+    F[ivy(0)]=-0.5*rho(r_norme)*S*Cx*v[1]*v_norm; // force de frottement atmosphérique en y
     return F;
   }
 
@@ -151,7 +160,7 @@ private:
       valarray<double> r = {y[ix(i)],y[ix(i)]}; // position du corps
       //useless?:double r_norm = sqrt(pow(r[0], 2) + pow(r[1], 2)); // norme de la position du corps
       //maths A VERIFIER; utiliser slice pour optimiser le code:
-      F[ivx(i)]=m[i]*pow(Omega,2)*r[0]// force centrifuge en x
+      F[ivx(i)]=m[i]*pow(Omega,2)*r[0];// force centrifuge en x
       F[ivy(i)]=m[i]*pow(Omega,2)*r[1]; // force centrifuge en y
     }
     return F;
@@ -164,8 +173,8 @@ private:
   valarray<double> acceleration(const valarray<double>& y)
   {
     valarray<double> acc = valarray<double>(0.e0, 4*numBodies);
-    valarray<double> F_frot= F_frottement(y) //uniquement appliquée par la Terre sur Artemis
-    valarray<double> F_cent= F_centrifuge(y)
+    valarray<double> F_frot= F_frottement(y); //uniquement appliquée par la Terre sur Artemis
+    valarray<double> F_cent= F_centrifuge(y);
 
     for(size_t i=0; i<numBodies; ++i) 
     {
@@ -207,34 +216,47 @@ public:
     Exercice4(ConfigFile configFile)
     {
       // Stockage des parametres de simulation dans les attributs de la classe:
-      // A CHANGER à partir de l.25/26 et harmoniser avec le python
-      tf     = configFile.get<double>("tf",tf);	        // t final (overwritten if N_excit >0)
-      g     = configFile.get<double>("g", g);         // lire l'acceleration de gravite
-      m     = configFile.get<double>("m", m);         // lire la masse
-      L     = configFile.get<double>("L", L);         // lire la longueur
-      Omega = configFile.get<double>("Omega", Omega); // lire la frequence angulaire
-      r     = configFile.get<double>("r", r);         // lire le rayon
-      kappa = configFile.get<double>("kappa", kappa); // lire le coefficient de frottement
-      theta    = configFile.get<double>("theta0", theta);    // lire la condition initiale en theta
-      thetadot = configFile.get<double>("thetadot0", thetadot); // lire la condition initiale en thetadot
+      xA0  = configFile.get<double>("xA0", xA0);
+      yA0  = configFile.get<double>("yA0", yA0);
+      xT0  = configFile.get<double>("xT0", xT0);
+      yT0  = configFile.get<double>("yT0", yT0);
+      xL0  = configFile.get<double>("xL0", xL0);
+      yL0  = configFile.get<double>("yL0", yL0);
+      
+      vxA0 = configFile.get<double>("vxA0", vxA0);
+      vyA0 = configFile.get<double>("vyA0", vyA0);
+      vxT0 = configFile.get<double>("vxT0", vxT0);
+      vyT0 = configFile.get<double>("vyT0", vyT0);
+      vxL0 = configFile.get<double>("vxL0", vxL0);
+      vyL0 = configFile.get<double>("vyL0", vyL0);
 
-      N_excit  = configFile.get<int>("N");            // number of periods of excitation
-      nsteps_per= configFile.get<int>("nsteps");        // number of time step per period
-      sampling = configFile.get<unsigned int>("sampling",sampling); // lire le nombre de pas de temps entre chaque ecriture des diagnostics
+      tf          = configFile.get<double>("tf",tf);	        // t final 
+      dt_variable = configFile.get<bool>("dt_variable", dt_variable);
+      rho0        = configFile.get<double>("rho0", rho0);
+      Cx          = configFile.get<double>("Cx", Cx);
+      lambda      = configFile.get<double>("lambda", lambda);
+      R_A         = configFile.get<double>("R_A", R_A);
+      R_T         = configFile.get<double>("R_T", R_T);
+      R_L         = configFile.get<double>("R_L", R_L);
+      m_A         = configFile.get<double>("m_A", m_A);
+      m_T         = configFile.get<double>("m_T", m_T);
+      m_L         = configFile.get<double>("m_L", m_L);
+      d           = configFile.get<double>("d", d);
+      h           = configFile.get<double>("h", h);
+      dt0         = configFile.get<double>("dt0", dt0);
+      epsilon     = configFile.get<double>("epsilon", epsilon);
+      s           = configFile.get<double>("s", s);
+
+
+      N_excit  = 0;        // number of periods of excitation
+      sampling = 1;        // lire le nombre de pas de temps entre chaque ecriture des diagnostics
 
 
       // Ouverture du fichier de sortie
       outputFile = new ofstream(configFile.get<string>("output").c_str());
       outputFile->precision(15);
       
-      // ?????
-      if(N_excit>0){
-        tf = N_excit*(2*pi/Omega);
-        dt   = (2*pi/Omega)/nsteps_per;
-      }
-      else{
-        dt = tf/nsteps_per;
-      }
+      dt = dt0; // initialiser dt à dt0
     };
 
 
@@ -245,6 +267,46 @@ public:
       delete outputFile;
     };
     
+
+    bool CheckCollisions()
+    {
+      for(size_t i = 0; i < numBodies; ++i)
+      {
+          for(size_t j = i + 1; j < numBodies; ++j)
+          {
+              double distance = sqrt(pow(y[ix(i)] - y[ix(j)], 2) + pow(y[iy(i)] - y[iy(j)], 2));
+              if(distance < (R[i] + R[j])) // Si la distance est inférieure à la somme des rayons, il y a collision
+             {
+                return true;
+             }
+          }
+      }
+      return false; // Aucune collision détectée
+    }
+
+    // Simulation complete
+    void run()
+    {
+      t = 0.;
+      last = 0;
+      printOut(true);
+      while( (t < tf-0.5*dt ) && not(checkcoll) )
+      {
+          double errd; // erreur de la méthode RK4
+          do {
+          valarray<double> y_temp = rk4Step(dt*0.5,rk4Step(dt*05, y));
+          valarray<double> y_normal =rk4Step(dt, y);
+            errd = sqrt(((y_temp - y_normal)*(y_temp - y_normal)).sum()); // calculer l'erreur entre les deux méthodes
+            dt = s*dt*pow((epsilon/errd), 0.20); // réduire le pas de temps ou l'augmenter en fonction de d
+          } while (errd > epsilon);
+        
+        y=rk4Step(dt, y);
+        checkcoll = CheckCollisions();
+        printOut(false);
+      };
+      printOut(true);
+    };
+
     // Simulation complete
     void run()
     {
@@ -256,7 +318,7 @@ public:
       {
         //CheckCollisions();
         //implémenter dt variable
-        y=rk4step(dt_fixe, y);
+        y=rk4Step(dt0, y);
         printOut(false);
       }
       printOut(true);

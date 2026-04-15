@@ -15,41 +15,48 @@ input_filename = 'configuration.in.example' # Strictly no longer needed, but we 
 
 
 input_parameters = {
+    'xA0': 0.,
+    'yA0': 0.,
+    'xT0': 0.,
+    'yT0': 0.,
+    'xL0': 0.,
+    'yL0': 0.,
+    'vxA0': 0.,
+    'vyA0': 0.,
+    'vxT0': 0.,
+    'vyT0': 0.,
+    'vxL0': 0.,
+    'vyL0': 0.,
     'tf': 50, # t final (overwritten if N >0)
-    'N': 10000, # number of excitation periods
-    'nsteps': 100, # number of time steps per period (if N>0), number of timesteps total if N=0
-    'r': 0.15,
+    'dt_variable': False, 
     'rho0': 0.,
-    'mA': 8500,
-    'mT': 5.972e24,
-    'mL': 7.3477e22,
+    'Cx': 0.,       
+    'lamda': 0.,
+    'R_A': 0.,
+    'R_T': 0.,     
+    'R_L': 0.,
+    'm_A': 8500,
+    'm_T': 5.972e24,
+    'm_L': 7.3477e22,
     'R_0' : 314159*1000,
-    'R_terre': 6378.1*1000,
-    'd' : 5.02,
-    'g': 9.81,
-    'Omega': np.sqrt(9.81/0.2),
-    'alpha0': 0.,
-    'v0': 1.2,
-    'h' : 10*1000,
-    'sampling': 1,
+    'd' : 0,
+    'h': 0,
+    'dt0': 0.01,
+    'epsilon': 1e-6,
+    's': 0.9
 }
-theta0 = input_parameters["theta0"]
-g = input_parameters["g"]
-L = input_parameters["L"]
-tf = input_parameters["tf"]
-N = input_parameters["N"]
-r = input_parameters["r"]
-Omega = input_parameters["Omega"]
-sampling = input_parameters["sampling"]
+
+question = '3.2'
+
 # -------------------------------------------------
 
 # Updated from last time, the code below can now be used to scan any parameter, just make sure to update the paramstr and the variable_array accordingly
 
-paramstr = 'nsteps' # The parameter to scan, must be one of the keys in input_parameters
+paramstr = 'dt0' # The parameter to scan, must be one of the keys in input_parameters
 #theta0_other = theta0+10**(-10)
 variable_array = np.array([100]) # The values of the scanned parameter to simulate
 
-outstr = f"pendulum_kappa_{input_parameters['kappa']:.2g}_r_{input_parameters['r']:.2g}_Omega_{input_parameters['Omega']:.2g}"
+outstr = f"tf_{input_parameters['tf']:.2g}_dt_variable_{input_parameters['dt_variable']}_dt0_{input_parameters['dt0']:.2g}_rho0_{input_parameters['rho0']:.2g}_m_L_{input_parameters['m_L']:.2g}" # à compléter?
 
 # -------------------------------------------------
 # Create output directory (2 significant digits)
@@ -85,24 +92,13 @@ for i in range(len(variable_array)):
 # USER SETTINGS
 # ============================================================
 
-folder = r"/Users/matteorassat/Documents/GitHub/Code-Physnum/Exercise2_student/rotatingpendulum/problème"
-
-plot_layout = {
-    "theta_time": False,
-    "phase_space": True,
-    "energy": False,
-    "real_space": False,
-    "power": False,
-    "energy_balance": False
-}
-
-question = 'd'
+folder = r"/Users/tim/Documents/GitHub/Code-Physnum/Exercise3_student/sondes"
 
 # ============================================================
 # Output folder
 # ============================================================
 
-fig_dir = os.path.join(folder, "figures")
+fig_dir = os.path.join(folder, "figures_q_"+question)
 os.makedirs(fig_dir, exist_ok=True)
 
 # ============================================================
@@ -139,38 +135,5 @@ datasets = [datasets[i] for i in order]
 
 #-------------------------------------------------------------
 #PLOTS
-
-# ============================================================
-# Axis layout helper
-# ============================================================
-
-def get_axes(plot_key, title):
-
-    if plot_layout[plot_key]:
-
-        fig, ax = plt.subplots()
-        axes = [ax]*len(datasets)
-
-    else:
-
-        n = len(datasets)
-        ncols = min(3, n)
-        nrows = math.ceil(n/3)
-
-        fig, axarr = plt.subplots(nrows, ncols,figsize=(5*ncols,4*nrows))
-
-        axes = np.array(axarr).reshape(-1)
-
-        for j in range(n, len(axes)):
-            fig.delaxes(axes[j])
-
-        axes = axes[:n]
-
-    fig.suptitle(title)
-
-    return fig, axes
-
-
-cmap = plt.get_cmap("tab10")
 
 
