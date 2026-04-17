@@ -8,6 +8,25 @@ import re
 import math
 from scipy.interpolate import CubicSpline
 
+
+# constantes
+
+pho0_c = 1.2 # kg/m^3
+Cx_c = 0.3
+lambda_c = 7238.2 # m
+m_L_c = 7.3477e22 # kg
+m_T_c = 5.972e24 # kg
+m_A_c = 8500 # kg
+R_T_c =  6378.1e3 # m
+h = 1e4 # m
+r0 = 314159e3 # m
+v0 = 1.2e3  #m/s
+G = 6.67430e-11 # m^3 kg^-1 s^-2
+v_max = np.sqrt(v0**2+2*G*m_T_c*(1/(R_T_c+h)+1/r0)) # m/s
+alpha = np.arcsin(((R_T_c+h)*v_max)/(r0*v0))
+vxA0= v0*np.cos(np.pi-alpha)
+vyA0 = v0*np.sin(np.pi-alpha)
+
 # Parameters
 repertoire = './'
 executable = 'engine.exe'
@@ -15,14 +34,14 @@ input_filename = 'configuration.in.example' # Strictly no longer needed, but we 
 
 
 input_parameters = {
-    'xA0': 0.,
+    'xA0': -r0,
     'yA0': 0.,
     'xT0': 0.,
-    'yT0': 0.,
+    'yT0': 0., 
     'xL0': 0.,
     'yL0': 0.,
-    'vxA0': 0.,
-    'vyA0': 0.,
+    'vxA0': vxA0,
+    'vyA0': vyA0,
     'vxT0': 0.,
     'vyT0': 0.,
     'vxL0': 0.,
@@ -30,17 +49,16 @@ input_parameters = {
     'tf': 50, # t final (overwritten if N >0)
     'dt_variable': False, 
     'rho0': 0.,
-    'Cx': 0.,       
-    'lamda': 0.,
+    'Cx': Cx_c,  
+    'lamda': lambda_c,
     'R_A': 0.,
     'R_T': 0.,     
     'R_L': 0.,
     'm_A': 8500,
     'm_T': 5.972e24,
-    'm_L': 7.3477e22,
+    'm_L': m_L_c*1e-14,
     'R_0' : 314159*1000,
     'd' : 0,
-    'h': 0,
     'dt0': 0.01,
     'epsilon': 1e-6,
     's': 0.9
@@ -132,6 +150,8 @@ print(f"Found {len(datasets)} datasets.")
 order = np.argsort(param_values)
 param_values = np.array(param_values)[order]
 datasets = [datasets[i] for i in order]
+# ex: accéder à la 3e collone (yA) de la deuxieme simulation (dt=0.2) au 5e pas de temps:
+# datasets[1][4, 2]
 
 #-------------------------------------------------------------
 #PLOTS

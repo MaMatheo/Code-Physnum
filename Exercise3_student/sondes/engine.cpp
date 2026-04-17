@@ -27,7 +27,7 @@ private:
   bool checkcoll=false;
   double xA0, yA0, xT0, yT0, xL0, yL0; // positions initiales
   double vxA0, vyA0, vxT0, vyT0, vxL0, vyL0; // vitesses initiales
-  double rho0, Cx, lambda, R_A, R_T, R_L, m_A, d, h, m_T, m_L, dt0, epsilon,s; 
+  double rho0, Cx, lambda, R_A, R_T, R_L, m_A, d, m_T, m_L, dt0, epsilon,s; 
   const double G = 6.67430e-11; // constante de gravitation universelle
   const double S = pi*R_A*R_A; // section efficace de la sonde; à calculer dans python?
   valarray<double> m = {m_A, m_T, m_L}; // masses des corps
@@ -242,7 +242,6 @@ public:
       m_T         = configFile.get<double>("m_T", m_T);
       m_L         = configFile.get<double>("m_L", m_L);
       d           = configFile.get<double>("d", d);
-      h           = configFile.get<double>("h", h);
       dt0         = configFile.get<double>("dt0", dt0);
       epsilon     = configFile.get<double>("epsilon", epsilon);
       s           = configFile.get<double>("s", s);
@@ -307,22 +306,6 @@ public:
       printOut(true);
     };
 
-    // Simulation complete
-    void run()
-    {
-      t = 0.;
-      last = 0;
-      printOut(true);
-
-      while( t < tf-0.5*dt )
-      {
-        //CheckCollisions();
-        //implémenter dt variable
-        y=rk4Step(dt0, y);
-        printOut(false);
-      }
-      printOut(true);
-    };
 };
 
 // programme
