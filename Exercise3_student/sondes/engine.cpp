@@ -17,25 +17,21 @@ class Exercice4
 private: 
     // Existing private members of Exercice4...
   const double pi=3.1415926535897932384626433832795028841971e0;
+  const double G = 6.67430e-11; // constante de gravitation universelle
 
   // definition des variables
   const size_t numBodies=3; // Nombre de corps (<=3)
-  //const valarray<bool> fixe_indices = {true, true, true}; // Indique si les corps evoluent ou sont fixes (ex: Terre fixe => fixe_indices[1]=true)
 
   // constantes physiques et parametres de simulation
-  bool dt_variable;
+  bool dt_variable, f_cent_appliquee;
   bool checkcoll=false;
   double xA0, yA0, xT0, yT0, xL0, yL0; // positions initiales
   double vxA0, vyA0, vxT0, vyT0, vxL0, vyL0; // vitesses initiales
-  double rho0, Cx, lambda, R_A, R_T, R_L, m_A, d, m_T, m_L, dt0, epsilon,s; 
-  const double G = 6.67430e-11; // constante de gravitation universelle
-  const double S = pi*R_A*R_A; // section efficace de la sonde; à calculer dans python?
-  valarray<double> m = {m_A, m_T, m_L}; // masses des corps
-  valarray<double> R = {R_A, R_T, R_L}; // rayons des corps
-  double Omega = sqrt(G*m[1]*m[2]/pow(d,3)); // frequence angulaire de rotation du repère
-
-
-  valarray<double> y = {xA0, yA0, xT0, yT0, xL0, yL0, vxA0, vyA0, vxT0, vyT0, vxL0, vyL0};
+  double rho0, Cx, lambda, R_A, R_T, R_L, m_A, d, m_T, m_L, dt0, epsilon, s, S, Omega; 
+  
+  valarray<double> R = valarray<double>(3); // rayons des corps
+  valarray<double> m = valarray<double>(3); // masses des corps
+  valarray<double> y = valarray<double>(12);
   // y = ({x_i,y_i}_{i=1,2,3}, {vx_i,vy_i}_{i=1,2,3})
 
 
@@ -74,7 +70,7 @@ private:
       
       *outputFile << t << " ";
       for (size_t i = 0; i < y.size(); ++i) {*outputFile << y[i] << " ";}
-      *outputFile << emec << " " << momentum[0] << momentum[1] << checkcoll << endl;
+      *outputFile << emec << " " << momentum[0] << momentum[1] << endl;
       // printer l'accélération? -> q.3.3
       last = 1;
     }
@@ -140,7 +136,7 @@ private:
   // force de frottements atmosphériques; retourne vecteur 12D
   valarray<double> F_frottement(const valarray<double>& y) // appliqué uniquement par la Terre sur Artemis
   {
-    double r_norme = sqrt( pow(y[ix(0)]-y[ix(1)],2) + pow(y[ix(0)]-y[ix(1)],2) ); //norme de la position relative de Artemis /rap à la Terre
+    double r_norme = sqrt( pow(y[ix(0)]-y[ix(1)],2) + pow(y[iy(0)]-y[iy(1)],2) ); //norme de la position relative de Artemis /rap à la Terre
     valarray<double> v = {y[ivx(0)]-y[ivx(1)], y[ivy(0)]-y[ivy(1)]}; //vitesse relative "-"
     double v_norm = sqrt(pow(v[0], 2) + pow(v[1], 2)); // norme de la vitesse relative "-"
     valarray<double> F = valarray<double>(0.e0, 4*numBodies); //force appliquée en format vectoriel
@@ -154,7 +150,6 @@ private:
   valarray<double> F_centrifuge(const valarray<double>& y) // appliqué uniquement par la Terre sur Artemis
   {
     valarray<double> F = valarray<double>(0.e0, 4*numBodies); //force appliquée en format vectoriel
-    
     for(size_t i = 0; i < numBodies; ++i)
     {
       valarray<double> r = {y[ix(i)],y[ix(i)]}; // position du corps
@@ -193,7 +188,11 @@ private:
               F_grav_total[ivy(i)] += F_grav_indice(j, i, y)[1];
           }
       }      
-      valarray<double> F_total = F_grav_total + F_frot + F_cent; // somme des forces 
+      valarray<double> F_total = F_grav_total + F_frot; 
+      if(f_cent_appliquee)
+      {
+        F_total += F_cent;
+      } // somme des forces 
       //utiliser slice pour optimiser le code:
       acc[ivx(i)] = F_total[ivx(i)]/m[i];
       acc[ivy(i)] = F_total[ivy(i)]/m[i];
@@ -245,7 +244,7 @@ public:
       dt0         = configFile.get<double>("dt0", dt0);
       epsilon     = configFile.get<double>("epsilon", epsilon);
       s           = configFile.get<double>("s", s);
-
+      f_cent_appliquee = configFile.get<bool>("f_cent_appliquee", f_cent_appliquee);
 
       N_excit  = 0;        // number of periods of excitation
       sampling = 1;        // lire le nombre de pas de temps entre chaque ecriture des diagnostics
@@ -256,6 +255,13 @@ public:
       outputFile->precision(15);
       
       dt = dt0; // initialiser dt à dt0
+      double S = pi*R_A*R_A; // section efficace de la sonde; à calculer dans python?
+      double Omega = sqrt(G*m_T*m_L/pow(d,3)); // frequence angulaire de rotation du repère
+
+      valarray<double> R = {R_A, R_T, R_L}; // rayons des corps
+      valarray<double> m = {m_A, m_T, m_L}; // masses des corps
+      valarray<double> y = {xA0, yA0, xT0, yT0, xL0, yL0, vxA0, vyA0, vxT0, vyT0, vxL0, vyL0};
+      // y = ({x_i,y_i}_{i=1,2,3}, {vx_i,vy_i}_{i=1,2,3})
     };
 
 
@@ -277,6 +283,7 @@ public:
               if(distance < (R[i] + R[j])) // Si la distance est inférieure à la somme des rayons, il y a collision
              {
                 return true;
+                *outputFile << checkcoll << endl;
              }
           }
       }
@@ -293,7 +300,7 @@ public:
       {
           double errd; // erreur de la méthode RK4
           do {
-          valarray<double> y_temp = rk4Step(dt*0.5,rk4Step(dt*05, y));
+          valarray<double> y_temp = rk4Step(dt*0.5,rk4Step(dt*0.5, y));
           valarray<double> y_normal =rk4Step(dt, y);
             errd = sqrt(((y_temp - y_normal)*(y_temp - y_normal)).sum()); // calculer l'erreur entre les deux méthodes
             dt = s*dt*pow((epsilon/errd), 0.20); // réduire le pas de temps ou l'augmenter en fonction de d
