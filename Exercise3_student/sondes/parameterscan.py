@@ -55,7 +55,7 @@ input_parameters = {
     'dt_variable': False, 
     'rho0': 0.,
     'Cx': Cx_c,  
-    'lamda': lambda_c,
+    'lambda': lambda_c,
     'R_A': R_A_c,
     'R_T': R_T_c,     
     'R_L': R_L_c,
@@ -63,7 +63,7 @@ input_parameters = {
     'm_T': m_T_c,
     'm_L': m_L_c*1e-14,
     'd' : d_c,
-    'dt0': 0.01,
+    'dt0': 100,
     'epsilon': 1e-6,
     's': 0.9,
     'f_cent_appliquee': False
@@ -77,7 +77,7 @@ question = '3.2'
 
 paramstr = 'dt0' # The parameter to scan, must be one of the keys in input_parameters
 #theta0_other = theta0+10**(-10)
-variable_array = np.array([1]) # The values of the scanned parameter to simulate
+variable_array = np.array([100]) # The values of the scanned parameter to simulate
 
 outstr = f"tf_{input_parameters['tf']:.2g}_dt_variable_{input_parameters['dt_variable']}_dt0_{input_parameters['dt0']:.2g}_rho0_{input_parameters['rho0']:.2g}_m_L_{input_parameters['m_L']:.2g}" # à compléter?
 

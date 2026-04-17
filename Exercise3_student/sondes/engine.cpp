@@ -70,7 +70,7 @@ private:
       
       *outputFile << t << " ";
       for (size_t i = 0; i < y.size(); ++i) {*outputFile << y[i] << " ";}
-      *outputFile << emec << " " << momentum[0] << momentum[1] << endl;
+      *outputFile << emec << " " << momentum[0] << " " << momentum[1] << endl;
       // printer l'accélération? -> q.3.3
       last = 1;
     }
@@ -92,9 +92,9 @@ private:
     for(size_t i = 0; i < numBodies; ++i)
     {
       energie_cinetique += 0.5*m[i]*(pow(y[ivx(i)],2)+pow(y[ivy(i)],2));
-      for(size_t j = 0; j < numBodies; ++j)
+      for(size_t j = i+1; j < numBodies; ++j)
       {
-        if(j!=i){energie_potentielle += -G*m[i]*m[j]/sqrt(pow(y[ix(i)]-y[ix(j)],2)+pow(y[iy(i)]-y[iy(j)],2));}
+        energie_potentielle += -G*m[i]*m[j]/sqrt(pow(y[ix(i)]-y[ix(j)],2)+pow(y[iy(i)]-y[iy(j)],2));
       }
     }
     
@@ -123,7 +123,7 @@ private:
   {
     valarray<double> r = {y[ix(A)] - y[ix(B)], y[iy(A)] - y[iy(B)]}; //vecteur AB
     double r_norm = sqrt(pow(r[0], 2) + pow(r[1], 2)); // norme du vecteur AB
-    valarray<double> F = (-G * m[0] * m[1] / pow(r_norm,3))*r; //force gravitationnelle exercée par A sur B
+    valarray<double> F = (-G * m[A] * m[B] / pow(r_norm,3))*r; //force gravitationnelle exercée par A sur B
     return F; 
   }
 
@@ -255,12 +255,12 @@ public:
       outputFile->precision(15);
       
       dt = dt0; // initialiser dt à dt0
-      double S = pi*R_A*R_A; // section efficace de la sonde; à calculer dans python?
-      double Omega = sqrt(G*m_T*m_L/pow(d,3)); // frequence angulaire de rotation du repère
+      S = pi*R_A*R_A; // section efficace de la sonde; à calculer dans python?
+      Omega = sqrt(G*m_T*m_L/pow(d,3)); // frequence angulaire de rotation du repère
 
-      valarray<double> R = {R_A, R_T, R_L}; // rayons des corps
-      valarray<double> m = {m_A, m_T, m_L}; // masses des corps
-      valarray<double> y = {xA0, yA0, xT0, yT0, xL0, yL0, vxA0, vyA0, vxT0, vyT0, vxL0, vyL0};
+      R = {R_A, R_T, R_L}; // rayons des corps
+      m = {m_A, m_T, m_L}; // masses des corps
+      y = {xA0, yA0, xT0, yT0, xL0, yL0, vxA0, vyA0, vxT0, vyT0, vxL0, vyL0};
       // y = ({x_i,y_i}_{i=1,2,3}, {vx_i,vy_i}_{i=1,2,3})
     };
 
@@ -282,8 +282,8 @@ public:
               double distance = sqrt(pow(y[ix(i)] - y[ix(j)], 2) + pow(y[iy(i)] - y[iy(j)], 2));
               if(distance < (R[i] + R[j])) // Si la distance est inférieure à la somme des rayons, il y a collision
              {
-                return true;
                 *outputFile << checkcoll << endl;
+                return true;
              }
           }
       }
@@ -298,6 +298,8 @@ public:
       printOut(true);
       while( (t < tf-0.5*dt ) && not(checkcoll) )
       {
+        if (dt_variable)
+        {
           double errd; // erreur de la méthode RK4
           do {
           valarray<double> y_temp = rk4Step(dt*0.5,rk4Step(dt*0.5, y));
@@ -305,10 +307,11 @@ public:
             errd = sqrt(((y_temp - y_normal)*(y_temp - y_normal)).sum()); // calculer l'erreur entre les deux méthodes
             dt = s*dt*pow((epsilon/errd), 0.20); // réduire le pas de temps ou l'augmenter en fonction de d
           } while (errd > epsilon);
-        
+        }
         y=rk4Step(dt, y);
+        t+=dt;
         checkcoll = CheckCollisions();
-        printOut(false);
+        printOut( false);
       };
       printOut(true);
     };
