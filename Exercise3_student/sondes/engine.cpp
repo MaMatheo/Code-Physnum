@@ -3,7 +3,7 @@
 #include <cmath>          // librerie mathematique de base
 #include <iomanip>        // input output manipulators
 #include <valarray>       // valarray functions
-#include "/Users/tim/Documents/GitHub/Code-Physnum/Exercise3_student/common/ConfigFile.h" // Il contient les methodes pour lire inputs et ecrire outputs 
+#include "/Users/matteorassat/Documents/GitHub/Code-Physnum/Exercise3_student/common/ConfigFile.h" // Il contient les methodes pour lire inputs et ecrire outputs 
 #include <numeric>
 
 using namespace std; // ouvrir un namespace avec la librerie c++ de base
@@ -45,9 +45,9 @@ private:
   ofstream *outputFile;    // Pointeur vers le fichier de sortie
 
   //fonctions pour acceder à l'indice de chaque variable dans le tableau y
-  size_t ix(size_t i) const { return 2 * i; }
-  size_t iy(size_t i) const { return 2 * i + 1; }
-  size_t ivx(size_t i) const { return 2 * numBodies + 2 * i; }
+  size_t ix(size_t i) const { return 2 * i ; }
+  size_t iy(size_t i) const { return 2 * i +1; }
+  size_t ivx(size_t i) const { return 2 * numBodies + 2 * i ; }
   size_t ivy(size_t i) const { return 2 * numBodies + 2 * i + 1; }
   // Artemis[i=0], Terre[i=1], Lune[i=2]
 
@@ -123,7 +123,7 @@ private:
   {
     valarray<double> r = {y[ix(A)] - y[ix(B)], y[iy(A)] - y[iy(B)]}; //vecteur AB
     double r_norm = sqrt(pow(r[0], 2) + pow(r[1], 2)); // norme du vecteur AB
-    valarray<double> F = (-G * m[A] * m[B] / pow(r_norm,3))*r; //force gravitationnelle exercée par A sur B
+    valarray<double> F = ( G * m[A] * m[B] / pow(r_norm,3))*r; //force gravitationnelle exercée par A sur B
     return F; 
   }
 
@@ -152,7 +152,7 @@ private:
     valarray<double> F = valarray<double>(0.e0, 4*numBodies); //force appliquée en format vectoriel
     for(size_t i = 0; i < numBodies; ++i)
     {
-      valarray<double> r = {y[ix(i)],y[ix(i)]}; // position du corps
+      valarray<double> r = {y[ix(i)],y[iy(i)]}; // position du corps
       //useless?:double r_norm = sqrt(pow(r[0], 2) + pow(r[1], 2)); // norme de la position du corps
       //maths A VERIFIER; utiliser slice pour optimiser le code:
       F[ivx(i)]=m[i]*pow(Omega,2)*r[0];// force centrifuge en x
@@ -170,42 +170,38 @@ private:
     valarray<double> acc = valarray<double>(0.e0, 4*numBodies);
     valarray<double> F_frot= F_frottement(y); //uniquement appliquée par la Terre sur Artemis
     valarray<double> F_cent= F_centrifuge(y);
+    for(size_t i = 0; i < numBodies; ++i)
+   {
+      acc[ix(i)] = y[ivx(i)];
+      acc[iy(i)] = y[ivy(i)];
 
-    for(size_t i=0; i<numBodies; ++i) 
-    {
-      // update les positions à partir des vitesses; utiliser slice pour optimiser le code:
-      acc[ix(i)]=y[ivx(i)];
-      acc[iy(i)]=y[ivy(i)];
-
-      // update les vitesses à partir des forces
-      valarray<double> F_grav_total(0.0, 4*numBodies); //force gravitationnelle totale exercée sur le corps i
-
+      double ax = 0.0, ay = 0.0;
       for(size_t j = 0; j < numBodies; ++j)
       {
-          if(j != i)
-          {
-              F_grav_total[ivx(i)] += F_grav_indice(j, i, y)[0];
-              F_grav_total[ivy(i)] += F_grav_indice(j, i, y)[1];
-          }
-      }      
-      valarray<double> F_total = F_grav_total + F_frot; 
-      if(f_cent_appliquee)
-      {
-        F_total += F_cent;
-      } // somme des forces 
-      //utiliser slice pour optimiser le code:
-      acc[ivx(i)] = F_total[ivx(i)]/m[i];
-      acc[ivy(i)] = F_total[ivy(i)]/m[i];
-    }
+        if(j != i)
+        {
+          valarray<double> F = F_grav_indice(j, i, y); // force de j sur i
+          ax += F[0];
+          ay += F[1];
+        }
+      }
+    // Ajouter frottement et centrifuge (uniquement les composantes de i)
+      ax += F_frot[ivx(i)];
+      ay += F_frot[ivy(i)];
+      if(f_cent_appliquee) { ax += F_cent[ivx(i)]; ay += F_cent[ivy(i)]; }
+
+      acc[ivx(i)] = ax / m[i];
+      acc[ivy(i)] = ay / m[i];
+   }
     return acc;
   }
  
   valarray<double> rk4Step(double step, const valarray<double>& y)
   {
     valarray<double> k1 = acceleration(y);
-    valarray<double> k2 = acceleration(y + 0.5 * k1);
-    valarray<double> k3 = acceleration(y + 0.5 * k2);
-    valarray<double> k4 = acceleration(y + k3);
+    valarray<double> k2 = acceleration(y + 0.5 * k1*step);  // peut etre multiplier par step
+    valarray<double> k3 = acceleration(y + 0.5 * k2*step);
+    valarray<double> k4 = acceleration(y + k3*step);
     return y + (k1 + 2*k2 + 2*k3 + k4)*step/6.0;
   }
 
@@ -256,7 +252,7 @@ public:
       
       dt = dt0; // initialiser dt à dt0
       S = pi*R_A*R_A; // section efficace de la sonde; à calculer dans python?
-      Omega = sqrt(G*m_T*m_L/pow(d,3)); // frequence angulaire de rotation du repère
+      Omega = sqrt(G*(m_T+m_L)/pow(d,3)); // frequence angulaire de rotation du repère
 
       R = {R_A, R_T, R_L}; // rayons des corps
       m = {m_A, m_T, m_L}; // masses des corps
@@ -282,7 +278,7 @@ public:
               double distance = sqrt(pow(y[ix(i)] - y[ix(j)], 2) + pow(y[iy(i)] - y[iy(j)], 2));
               if(distance < (R[i] + R[j])) // Si la distance est inférieure à la somme des rayons, il y a collision
              {
-                *outputFile << checkcoll << endl;
+                //*outputFile << checkcoll << endl;
                 return true;
              }
           }
@@ -302,10 +298,13 @@ public:
         {
           double errd; // erreur de la méthode RK4
           do {
-          valarray<double> y_temp = rk4Step(dt*0.5,rk4Step(dt*0.5, y));
-          valarray<double> y_normal =rk4Step(dt, y);
+          valarray<double> y_normal = rk4Step(dt, y);
+         valarray<double> y_half = rk4Step(dt*0.5, y);
+         valarray<double> y_temp = rk4Step(dt*0.5, y_half);
             errd = sqrt(((y_temp - y_normal)*(y_temp - y_normal)).sum()); // calculer l'erreur entre les deux méthodes
+            if (errd > epsilon) {
             dt = s*dt*pow((epsilon/errd), 0.20); // réduire le pas de temps ou l'augmenter en fonction de d
+            }
           } while (errd > epsilon);
         }
         y=rk4Step(dt, y);
@@ -332,8 +331,7 @@ int main(int argc, char* argv[])
   for(int i(2); i<argc; ++i) // Input complementaires ("./Exercice2 config_perso.in input_scan=[valeur]")
       configFile.process(argv[i]);
 
-      Exercice4* engine;
-
+  Exercice4* engine;
   // Create an instance of Exercice4 
   engine = new Exercice4(configFile);
 
