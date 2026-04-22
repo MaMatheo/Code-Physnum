@@ -3,13 +3,12 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
-#include "../../common/ConfigFile.h"
+#include "User/matteorassat/Documents/GitHub/Code-Physnum/Exercice3_student/common/ConfigFile.h"
 
 using namespace std;
 
 const double PI = 3.1415926535897932384626433832795028841971e0;
-
+const double epsilon_0 = 8.854187817e-12
 // Resolution d'un systeme d'equations lineaires par elimination de Gauss-Jordan
 // (tridiagonal system: diag, lower, upper, rhs all of consistent sizes)
 template<class T>
@@ -38,16 +37,38 @@ vector<T> solve(const vector<T>& diag,
 
 // TODO: Implement the relative permittivity epsilon_r(r).
 //       Should allow for a trivial test case (trivial=true) 
-double epsilon_r(/* TODO: add arguments */)
-{
-    return 0.0; // TODO: replace
+double epsilon_r(double r,double b, double R, bool trivial)
+{   
+    if (trivial) {
+        return 1.0;
+    } else {
+        if ( 0 <= r < b) {
+            return 1.0;
+        }
+        if ( b <= r <= R ) {
+            return 3 + 6*((r-b)/(R-b));
+        }
+    }
+    cout << "ERREUR : r doit etre entre 0 et R. epsilon_r retourne 1" << endl;
+    return 1.0; 
 }
 
 // TODO: Implement the normalised free charge density rho_lib(r) / epsilon_0.
 //       Should allow for a trivial test case (trivial=true) 
-double rho_lib(/* TODO: add arguments */)
-{
-    return 0.0; // TODO: replace
+double rho_lib(double r,double b, double a0, bool trivial)
+{   
+    if (trivial) {
+        return epsilon_0;
+    } else {
+        if ( 0 <= r < b) {
+            return epsilon_0*a0*sin(PI*r/b);
+        }
+        if ( b <= r <= R ) {
+            return 0;
+        }
+    }
+    cout << "ERREUR : r doit etre entre 0 et R. rho_lib retourne 1" << endl;
+    return epsilon_0; 
 }
 
 int main(int argc, char* argv[])

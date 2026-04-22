@@ -27,12 +27,13 @@ private:
   bool checkcoll=false;
   double xA0, yA0, xT0, yT0, xL0, yL0; // positions initiales
   double vxA0, vyA0, vxT0, vyT0, vxL0, vyL0; // vitesses initiales
-  double rho0, Cx, lambda, R_A, R_T, R_L, m_A, d, m_T, m_L, dt0, epsilon, s, S, Omega; 
-  
+  double rho0, Cx, lambda, R_A, R_T, R_L, m_A, d, m_T, m_L, dt0, epsilon, s, S, Omega;
+
+  valarray<double> acc_A = valarray<double>(2); // acceleration de Artemis
   valarray<double> R = valarray<double>(3); // rayons des corps
   valarray<double> m = valarray<double>(3); // masses des corps
   valarray<double> y = valarray<double>(12);
-  // y = ({x_i,y_i}_{i=1,2,3}, {vx_i,vy_i}_{i=1,2,3})
+  // y = ({x_i,y_i}{i=1,2,3}, {vx_i,vy_i}{i=1,2,3})
 
 
   double t;  // Temps courant pas de temps
@@ -70,7 +71,8 @@ private:
       
       *outputFile << t << " ";
       for (size_t i = 0; i < y.size(); ++i) {*outputFile << y[i] << " ";}
-      *outputFile << emec << " " << momentum[0] << " " << momentum[1] << endl;
+      for (size_t i = 0; i < momentum.size(); ++i) {*outputFile << momentum[i] << " ";}
+      *outputFile << emec << " " << acc_A[0] << " " << acc_A[1] << " " << checkcoll << " " << F_frottement(y)[ivx(0)] << " " << F_frottement(y)[ivy(0)] << " " << dt << endl;
       // printer l'accélération? -> q.3.3
       last = 1;
     }
@@ -104,15 +106,15 @@ private:
   // definir la qtté de mvmt du systême
   valarray<double> Momentum(const valarray<double>& y)
   {
-    valarray<double> sum = valarray<double>(0.e0, 2); //momentum total du systeme
+    valarray<double> mom = valarray<double>(0.e0, 6); 
     for(size_t i = 0; i < numBodies; ++i)
     {
         double vx = y[ivx(i)];
         double vy = y[ivy(i)];
-        valarray<double> v = {vx,vy};;
-        sum += m[i] * v;
+        mom[ix(i)] = m[i] * vx;
+        mom[iy(i)] = m[i] * vy;
     }
-    return sum;
+    return mom;
   }
 
   // CALCULS DES FORCES
@@ -169,7 +171,6 @@ private:
   {
     valarray<double> acc = valarray<double>(0.e0, 4*numBodies);
     valarray<double> F_frot= F_frottement(y); //uniquement appliquée par la Terre sur Artemis
-    valarray<double> F_cent= F_centrifuge(y);
     for(size_t i = 0; i < numBodies; ++i)
    {
       acc[ix(i)] = y[ivx(i)];
@@ -188,7 +189,12 @@ private:
     // Ajouter frottement et centrifuge (uniquement les composantes de i)
       ax += F_frot[ivx(i)];
       ay += F_frot[ivy(i)];
-      if(f_cent_appliquee) { ax += F_cent[ivx(i)]; ay += F_cent[ivy(i)]; }
+      if(f_cent_appliquee)
+      {
+        valarray<double> F_cent= F_centrifuge(y);
+        ax += F_cent[ivx(i)];
+        ay += F_cent[ivy(i)]; 
+      }
 
       acc[ivx(i)] = ax / m[i];
       acc[ivy(i)] = ay / m[i];
@@ -199,6 +205,7 @@ private:
   valarray<double> rk4Step(double step, const valarray<double>& y)
   {
     valarray<double> k1 = acceleration(y);
+    acc_A = {k1[ivx(0)],k1[ivy(0)]}; // stocker l'acceleration de Artemis pour l'écrire dans le fichier de sortie
     valarray<double> k2 = acceleration(y + 0.5 * k1*step);  // peut etre multiplier par step
     valarray<double> k3 = acceleration(y + 0.5 * k2*step);
     valarray<double> k4 = acceleration(y + k3*step);
@@ -254,10 +261,11 @@ public:
       S = pi*R_A*R_A; // section efficace de la sonde; à calculer dans python?
       Omega = sqrt(G*(m_T+m_L)/pow(d,3)); // frequence angulaire de rotation du repère
 
+      acc_A = valarray<double>(0.e0, 2); // initialiser l'acceleration de Artemis à 0
       R = {R_A, R_T, R_L}; // rayons des corps
       m = {m_A, m_T, m_L}; // masses des corps
       y = {xA0, yA0, xT0, yT0, xL0, yL0, vxA0, vyA0, vxT0, vyT0, vxL0, vyL0};
-      // y = ({x_i,y_i}_{i=1,2,3}, {vx_i,vy_i}_{i=1,2,3})
+      // y = ({x_i,y_i}{i=1,2,3}, {vx_i,vy_i}{i=1,2,3})
     };
 
 
@@ -278,7 +286,7 @@ public:
               double distance = sqrt(pow(y[ix(i)] - y[ix(j)], 2) + pow(y[iy(i)] - y[iy(j)], 2));
               if(distance < (R[i] + R[j])) // Si la distance est inférieure à la somme des rayons, il y a collision
              {
-                //*outputFile << checkcoll << endl;
+                cout << "collision de l'astre " << i << "avec l'astre " << j << endl;
                 return true;
              }
           }
@@ -302,11 +310,10 @@ public:
          valarray<double> y_half = rk4Step(dt*0.5, y);
          valarray<double> y_temp = rk4Step(dt*0.5, y_half);
             errd = sqrt(((y_temp - y_normal)*(y_temp - y_normal)).sum()); // calculer l'erreur entre les deux méthodes
-            if (errd > epsilon) {
             dt = s*dt*pow((epsilon/errd), 0.20); // réduire le pas de temps ou l'augmenter en fonction de d
-            }
           } while (errd > epsilon);
         }
+        
         y=rk4Step(dt, y);
         t+=dt;
         checkcoll = CheckCollisions();
@@ -341,5 +348,3 @@ int main(int argc, char* argv[])
   cout << "Fin de la simulation." << endl;
   return 0;
 }
-
-
