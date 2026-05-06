@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "User/matteorassat/Documents/GitHub/Code-Physnum/Exercice3_student/common/ConfigFile.h"
+#include "/Documents/GitHub/Code-Physnum/Exercice4_2026/common/ConfigFile.h"
 
 using namespace std;
 
@@ -42,10 +42,10 @@ double epsilon_r(double r,double b, double R, bool trivial)
     if (trivial) {
         return 1.0;
     } else {
-        if ( 0 <= r < b) {
+        if ( r < b && r >= 0 ) {
             return 1.0;
         }
-        if ( b <= r <= R ) {
+        if ( r <= R  && r >= b) {
             return 3 + 6*((r-b)/(R-b));
         }
     }
@@ -60,53 +60,16 @@ double rho_lib(double r,double b, double a0, bool trivial)
     if (trivial) {
         return epsilon_0;
     } else {
-        if ( 0 <= r < b) {
+        if ( r < b && r >= 0 ) {
             return epsilon_0*a0*sin(PI*r/b);
         }
-        if ( b <= r <= R ) {
+        if ( r <= R  && r >= b) {
             return 0;
         }
     }
     cout << "ERREUR : r doit etre entre 0 et R. rho_lib retourne 1" << endl;
     return epsilon_0; 
 }
-
-// Question 1
-// valarray<double> rk4Step(double step, const valarray<double>& y)
-//   {
-//     valarray<double> k1 = acceleration(y);
-//     acc_A = {k1[ivx(0)],k1[ivy(0)]}; // stocker l'acceleration de Artemis pour l'écrire dans le fichier de sortie
-//     valarray<double> k2 = acceleration(y + 0.5 * k1*step);  // peut etre multiplier par step
-//     valarray<double> k3 = acceleration(y + 0.5 * k2*step);
-//     valarray<double> k4 = acceleration(y + k3*step);
-//     return y + (k1 + 2*k2 + 2*k3 + k4)*step/6.0;
-// }
-// void run()
-//     {
-//       t = 0.;
-//       last = 0;
-//       printOut(true);
-//       while( (t < tf-0.5*dt ) && not(checkcoll) )
-//       {
-//         if (dt_variable)
-//         {
-//           double errd; // erreur de la méthode RK4
-//           do {
-//           valarray<double> y_normal = rk4Step(dt, y);
-//          valarray<double> y_half = rk4Step(dt*0.5, y);
-//          valarray<double> y_temp = rk4Step(dt*0.5, y_half);
-//             errd = sqrt(((y_temp - y_normal)*(y_temp - y_normal)).sum()); // calculer l'erreur entre les deux méthodes
-//             dt = s*dt*pow((epsilon/errd), 0.20); // réduire le pas de temps ou l'augmenter en fonction de d
-//           } while (errd > epsilon);
-//         }
-        
-//         y=rk4Step(dt, y);
-//         t+=dt;
-//         checkcoll = CheckCollisions();
-//         printOut( false);
-//       };
-//       printOut(true);
-//     };
 
 int main(int argc, char* argv[])
 {
@@ -170,7 +133,7 @@ int main(int argc, char* argv[])
         // TODO: compute alpha_k and beta_k
         //       then add their contributions to diag, lower, upper, and rhs
         double alpha_k = epsilon_r(midPoint[k], b, R, trivial)*midPoint[k]/h[k];
-        double beta_k = rholib(midPoint[k], b, R, trivial)*midPoint[k]*h[k]/ (2*epsilon_0);
+        double beta_k = rho_lib(midPoint[k], b, R, trivial)*midPoint[k]*h[k]/ (2*epsilon_0);
         diag[k] +=alpha_k ;
         diag[k+1] += alpha_k ;
         lower[k] -= alpha_k ;
