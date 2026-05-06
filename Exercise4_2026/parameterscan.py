@@ -1,6 +1,8 @@
 import numpy as np
 import subprocess
 import os
+import glob
+import matplotlib.pyplot as plt
 
 # -----------------------------------------------------------------------
 # Parameter scan script for the electrostatics exercise.
@@ -25,12 +27,17 @@ input_parameters = {
     'N1'     : 5,      # Intervals in [0, b]
     'N2'     : 5,      # Intervals in [b, R]
 }
-
+question = "bi"
 # -----------------------------------------------------------------------
 # Choose the parameter to scan
 # -----------------------------------------------------------------------
 paramstr       = 'N1'                        # parameter name in engine
-variable_array = 2**np.arange(1, 9)          # N = 2, 4, 8, ..., 256
+
+if question == "bii":
+    variable_array = 2**np.arange(1, 9)          # N = 2, 4, 8, ..., 256
+
+if question == "bi":
+    variable_array = np.array([5])
 
 # Build a label for output directories / filenames
 outstr = (f"electrostatics_b_{input_parameters['b']:.2g}"
@@ -69,3 +76,51 @@ for val in variable_array:
     print(cmd)
     subprocess.run(cmd, shell=True)
     print("Done.")
+
+
+# ============================================================
+# Output folder
+# ============================================================
+
+folder = r"/Users/matteorassat/Documents/GitHub/Code-Physnum/Exercise4_2026"
+fig_dir = os.path.join(folder, "figures_q_"+question)
+os.makedirs(fig_dir, exist_ok=True)
+
+# ============================================================
+# Scan files
+# ============================================================
+
+files = sorted(glob.glob(os.path.join(folder,outdir, "*.txt")))
+
+datasets = []
+param_values = []
+param_name = None
+
+for f in files:
+
+    name = os.path.basename(f)      # remove path
+    name = name[:-4]                # remove ".txt"
+
+    parts = name.split("_")
+
+    param_name = parts[-2]          # scanned parameter
+    value = float(parts[-1])        # parameter value
+
+    data = np.loadtxt(f)
+
+    datasets.append(data)
+    param_values.append(value)
+
+print(f"Found {len(datasets)} datasets.")
+
+# Sort datasets
+order = np.argsort(param_values)
+param_values = np.array(param_values)[order]
+datasets = [datasets[i] for i in order]
+
+#-------------------------------------------------------------
+#PLOTS
+#-------------------------------------------------------------
+
+#plot bi
+if question == "bi":
