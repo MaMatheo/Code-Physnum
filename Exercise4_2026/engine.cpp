@@ -71,6 +71,43 @@ double rho_lib(double r,double b, double a0, bool trivial)
     return epsilon_0; 
 }
 
+// Question 1
+// valarray<double> rk4Step(double step, const valarray<double>& y)
+//   {
+//     valarray<double> k1 = acceleration(y);
+//     acc_A = {k1[ivx(0)],k1[ivy(0)]}; // stocker l'acceleration de Artemis pour l'écrire dans le fichier de sortie
+//     valarray<double> k2 = acceleration(y + 0.5 * k1*step);  // peut etre multiplier par step
+//     valarray<double> k3 = acceleration(y + 0.5 * k2*step);
+//     valarray<double> k4 = acceleration(y + k3*step);
+//     return y + (k1 + 2*k2 + 2*k3 + k4)*step/6.0;
+// }
+// void run()
+//     {
+//       t = 0.;
+//       last = 0;
+//       printOut(true);
+//       while( (t < tf-0.5*dt ) && not(checkcoll) )
+//       {
+//         if (dt_variable)
+//         {
+//           double errd; // erreur de la méthode RK4
+//           do {
+//           valarray<double> y_normal = rk4Step(dt, y);
+//          valarray<double> y_half = rk4Step(dt*0.5, y);
+//          valarray<double> y_temp = rk4Step(dt*0.5, y_half);
+//             errd = sqrt(((y_temp - y_normal)*(y_temp - y_normal)).sum()); // calculer l'erreur entre les deux méthodes
+//             dt = s*dt*pow((epsilon/errd), 0.20); // réduire le pas de temps ou l'augmenter en fonction de d
+//           } while (errd > epsilon);
+//         }
+        
+//         y=rk4Step(dt, y);
+//         t+=dt;
+//         checkcoll = CheckCollisions();
+//         printOut( false);
+//       };
+//       printOut(true);
+//     };
+
 int main(int argc, char* argv[])
 {
     // USAGE: ./engine [configuration-file] [<key=value> ...]
@@ -107,10 +144,19 @@ int main(int argc, char* argv[])
 
     vector<double> r(npoints);
     // TODO: fill r[0..N1] and r[N1..npoints-1]
-
+    for(size_t i = 0; i < N1; i++){
+        r[i] = i*h1;
+    }
+    for(size_t i = 0; i =< N2; i++){
+        r[N1 + i] = b + i*h2;
+    }
     vector<double> h(ninters);           // Interval widths
     vector<double> midPoint(ninters);    // Midpoints of each interval
     // TODO: fill h[i]  and  midPoint[i]
+    for(size_t i = 0; i < ninters; i++){
+        h[i] = r[i + 1] - r[i];
+        midPoint[i] = (r[i + 1 ] - r[i])/2;
+    }
 
     // ---------------------------------------------------------------
     // Assemble the tridiagonal system  A * phi = rhs
@@ -123,9 +169,21 @@ int main(int argc, char* argv[])
     for (int k = 0; k < ninters; ++k) {
         // TODO: compute alpha_k and beta_k
         //       then add their contributions to diag, lower, upper, and rhs
+        double alpha_k = epsilon_r(midpoint[k], b, R, trivial)*midPoint[k]/h[k];
+        double beta_k = rholib(midPoint[k], b, R, trivial)*midPoint[k]*h[k]/ (2*epsilon_0);
+        diag[k] +=alpha_k ;
+        diag[k+1] += alpha_k ;
+        lower[k] -= alpha_k ;
+        upper[k] -= alpha_k ;
+        rhs[k] += beta_k ;
+        rhs[k+1] += beta_k ;
     }
-
+    
     // TODO: enforce the Dirichlet BC at r = R
+diag[ninters] = 1 ;
+lower[ninters - 1] = 0 ; 
+rhs[ninters] = V0;
+
 
     // ---------------------------------------------------------------
     // Solve the linear system
