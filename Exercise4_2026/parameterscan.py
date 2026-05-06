@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 # -----------------------------------------------------------------------
 
 # Path to compiled executable (adjust if needed)
-repertoire     = ''
+repertoire     = './'
 executable     = 'engine.exe'
 input_filename = 'trivial.in'   # base configuration file
 
@@ -82,7 +82,7 @@ for val in variable_array:
 # Output folder
 # ============================================================
 
-folder = r"/Users/matteorassat/Documents/GitHub/Code-Physnum/Exercise4_2026"
+folder = r"/Users/tim/Documents/GitHub/Code-Physnum/Exercise4_2026"
 fig_dir = os.path.join(folder, "figures_q_"+question)
 os.makedirs(fig_dir, exist_ok=True)
 
@@ -123,4 +123,4 @@ datasets = [datasets[i] for i in order]
 #-------------------------------------------------------------
 
 #plot bi
-if question == "bi":
+#if question == "bi":

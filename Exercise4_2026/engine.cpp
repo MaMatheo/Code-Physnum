@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "/Documents/GitHub/Code-Physnum/Exercice4_2026/common/ConfigFile.h"
+#include "/Users/tim/Documents/GitHub/Code-Physnum/Exercise4_2026/common/ConfigFile.h"
 
 using namespace std;
 
