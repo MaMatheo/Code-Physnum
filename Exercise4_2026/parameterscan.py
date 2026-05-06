@@ -18,6 +18,8 @@ executable     = 'engine.exe'
 input_filename = 'trivial.in'   # base configuration file
 
 # Base parameters (values here are overwritten by the scan below)
+question = "bi"
+
 input_parameters = {
     'b'      : 0.05,   # Inner radius [m]
     'R'      : 0.1,    # Outer radius [m]
@@ -27,11 +29,11 @@ input_parameters = {
     'N1'     : 5,      # Intervals in [0, b]
     'N2'     : 5,      # Intervals in [b, R]
 }
-question = "bi"
+
 # -----------------------------------------------------------------------
 # Choose the parameter to scan
 # -----------------------------------------------------------------------
-paramstr       = 'N1'                        # parameter name in engine
+paramstr  = 'N1'                        # parameter name in engine
 
 if question == "bii":
     variable_array = 2**np.arange(1, 9)          # N = 2, 4, 8, ..., 256
@@ -47,9 +49,19 @@ outstr = (f"electrostatics_b_{input_parameters['b']:.2g}"
 # -----------------------------------------------------------------------
 # Create output directory
 # -----------------------------------------------------------------------
-outdir = f"Scan_{paramstr}_{outstr}"
+outdir = question + f"Scan_{paramstr}_{outstr}"
 os.makedirs(outdir, exist_ok=True)
 print("Saving results in:", outdir)
+
+
+# ============================================================
+# Output folder
+# ============================================================
+
+folder = r"/Users/tim/Documents/GitHub/Code-Physnum/Exercise4_2026"
+fig_dir = os.path.join(folder, "figures_q_"+question)
+os.makedirs(fig_dir, exist_ok=True)
+
 
 # -----------------------------------------------------------------------
 # Run the scan
@@ -79,37 +91,42 @@ for val in variable_array:
 
 
 # ============================================================
-# Output folder
-# ============================================================
-
-folder = r"/Users/tim/Documents/GitHub/Code-Physnum/Exercise4_2026"
-fig_dir = os.path.join(folder, "figures_q_"+question)
-os.makedirs(fig_dir, exist_ok=True)
-
-# ============================================================
 # Scan files
 # ============================================================
 
-files = sorted(glob.glob(os.path.join(folder,outdir, "*.txt")))
+files = sorted(glob.glob(os.path.join(folder,outdir, "*.out")))
 
-datasets = []
+datasets = [[[],[],[]] for _ in range(len(variable_array))]
+data_types = []
 param_values = []
 param_name = None
 
-for f in files:
+for i,f in enumerate(files):
 
     name = os.path.basename(f)      # remove path
-    name = name[:-4]                # remove ".txt"
+    name = name[:-4]                # remove ".out"
 
     parts = name.split("_")
 
-    param_name = parts[-2]          # scanned parameter
-    value = float(parts[-1])        # parameter value
+    param_name = parts[-3]          # scanned parameter
+    value = float(parts[-2])          # parameter value
+    data_type = parts[-1]           # e.g. "phi", "divDrho", "ErDr"
+    
+    if data_type == "phi":
+        indice = 0
+    elif data_type == "divDrho":
+        indice = 1
+    elif data_type == "ErDr":
+        indice = 2
+    else:
+        raise ValueError(f"Unknown data type: {data_type}")
+
 
     data = np.loadtxt(f)
 
-    datasets.append(data)
-    param_values.append(value)
+    datasets[i//3][indice]=data
+    if value not in param_values:
+        param_values.append(value)
 
 print(f"Found {len(datasets)} datasets.")
 
@@ -118,9 +135,33 @@ order = np.argsort(param_values)
 param_values = np.array(param_values)[order]
 datasets = [datasets[i] for i in order]
 
+
+#POUR EXPLOITER DATASETS:
+#dataset[i] = [phi_data, divDrho_data, ErDr_data]
+
+#phi_data[i,j]: i la ligne (= point de grille), j la colonne (0 pour r, 1 pour phi)
+#divDrho_data[i,j]: idem, j=0 pour r_midmid, j=1 pour div_Dr/eps0, j=2 pour rho_lib/eps0
+#ErDr_data[i,j]: idem, j=0 pour r_mid, j=1 pour Er, j=2 pour Dr
+
+#exemple:
+#dataset[i][1,k] : phi à la i-eme simul au k-eme point de grille
+
 #-------------------------------------------------------------
 #PLOTS
 #-------------------------------------------------------------
 
 #plot bi
-#if question == "bi":
+if question == "bi":
+    plt.figure()
+    for i, dataset in enumerate(datasets):
+        phi_data = dataset[0]
+        r = phi_data[:,0]
+        phi = phi_data[:,1]
+        plt.plot(r, phi, label=f"{param_name}={param_values[i]:.2g}")
+    plt.xlabel("r [m]")
+    plt.ylabel("phi [V]")
+    plt.title("Electric potential")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(fig_dir, f"phi_vs_r_{param_name}.png"), dpi=300)
+    plt.show()

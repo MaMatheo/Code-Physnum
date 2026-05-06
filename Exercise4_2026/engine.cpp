@@ -199,7 +199,7 @@ rhs[ninters] = V0;
     }
     {
         // 3. Divergence check: columns  r_midmid  div(D_r)/eps0  rho_lib/eps0
-        ofstream ofs(output + "_divD_rho.out");
+        ofstream ofs(output + "_divDrho.out");
         ofs.precision(15);
         for (int k = 0; k < ninters - 1; ++k)
             ofs << rmidmid[k] << " " << div_Dr[k]
