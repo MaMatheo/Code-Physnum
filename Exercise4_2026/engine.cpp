@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
     for (int k = 0; k < ninters; ++k) {
         // TODO: compute alpha_k and beta_k
         //       then add their contributions to diag, lower, upper, and rhs
-        double alpha_k = epsilon_r(midpoint[k], b, R, trivial)*midPoint[k]/h[k];
+        double alpha_k = epsilon_r(midPoint[k], b, R, trivial)*midPoint[k]/h[k];
         double beta_k = rholib(midPoint[k], b, R, trivial)*midPoint[k]*h[k]/ (2*epsilon_0);
         diag[k] +=alpha_k ;
         diag[k+1] += alpha_k ;
@@ -199,6 +199,8 @@ rhs[ninters] = V0;
     for (int k = 0; k < ninters; ++k) {
         rmid[k] = midPoint[k];
         // TODO: compute Er[k] and Dr[k] 
+        Er[k] = -(phi[k+1] - phi[k])/h[k];
+        Dr[k] = epsilon_r(midPoint[k], b, R, trivial)*epsilon_0*Er[k];
     }
 
     // ---------------------------------------------------------------
@@ -211,6 +213,8 @@ rhs[ninters] = V0;
     for (int k = 0; k < ninters - 1; ++k) {
         rmidmid[k] = 0.5 * (rmid[k] + rmid[k + 1]);
         // TODO: compute div_Dr[k] and rho_at_midmid[k]
+        div_Dr[k] = (Dr[k + 1] - Dr[k])/midPoint[k+1];
+        rho_at_midmid[k] = rho_lib(rmidmid[k], b, R, trivial)/epsilon_0;
     }
 
     // ---------------------------------------------------------------
