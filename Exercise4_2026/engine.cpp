@@ -55,7 +55,7 @@ double epsilon_r(double r,double b, double R, bool trivial)
 
 // TODO: Implement the normalised free charge density rho_lib(r) / epsilon_0.
 //       Should allow for a trivial test case (trivial=true) 
-double rho_lib(double r,double b, double a0, bool trivial)
+double rho_lib(double r,double b, double R, double a0, bool trivial)
 {   
     if (trivial) {
         return epsilon_0;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     for(size_t i = 0; i < N1; i++){
         r[i] = i*h1;
     }
-    for(size_t i = 0; i =< N2; i++){
+    for(size_t i = 0; i <= N2; i++){
         r[N1 + i] = b + i*h2;
     }
     vector<double> h(ninters);           // Interval widths
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
         // TODO: compute alpha_k and beta_k
         //       then add their contributions to diag, lower, upper, and rhs
         double alpha_k = epsilon_r(midPoint[k], b, R, trivial)*midPoint[k]/h[k];
-        double beta_k = rho_lib(midPoint[k], b, R, trivial)*midPoint[k]*h[k]/ (2*epsilon_0);
+        double beta_k = rho_lib(midPoint[k], b, R , a0, trivial)*midPoint[k]*h[k]/ (2*epsilon_0);
         diag[k] +=alpha_k ;
         diag[k+1] += alpha_k ;
         lower[k] -= alpha_k ;
@@ -177,7 +177,7 @@ rhs[ninters] = V0;
         rmidmid[k] = 0.5 * (rmid[k] + rmid[k + 1]);
         // TODO: compute div_Dr[k] and rho_at_midmid[k]
         div_Dr[k] = (Dr[k + 1] - Dr[k])/midPoint[k+1];
-        rho_at_midmid[k] = rho_lib(rmidmid[k], b, R, trivial)/epsilon_0;
+        rho_at_midmid[k] = rho_lib(rmidmid[k], b, R , a0, trivial)/epsilon_0;
     }
 
     // ---------------------------------------------------------------
