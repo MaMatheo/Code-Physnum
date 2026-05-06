@@ -8,7 +8,7 @@
 using namespace std;
 
 const double PI = 3.1415926535897932384626433832795028841971e0;
-const double epsilon_0 = 8.854187817e-12
+const double epsilon_0 = 8.854187817e-12;
 // Resolution d'un systeme d'equations lineaires par elimination de Gauss-Jordan
 // (tridiagonal system: diag, lower, upper, rhs all of consistent sizes)
 template<class T>
