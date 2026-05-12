@@ -18,16 +18,19 @@ executable     = 'engine.exe'
 input_filename = 'trivial.in'   # base configuration file
 
 # Base parameters (values here are overwritten by the scan below)
-question = "bi"
+question = "a"  # "bi" for part bi, "bii" for part bii
+
+trivial = 'true' if question in ["bi", "bii"] else 'false'
 
 input_parameters = {
-    'b'      : 0.05,   # Inner radius [m]
+    'b'      : 0.1,   # Inner radius [m]
     'R'      : 0.1,    # Outer radius [m]
     'V0'     : 0,      # Boundary potential [V]
-    'a0'     : 1,      # Charge density scale [V/m^2]  (unused when trivial=true)
-    'trivial': 'true', # true: uniform test case
+    'a0'     : 10000,      # Charge density scale [V/m^2]  (unused when trivial=true)
+    'trivial': trivial, # true: uniform test case
     'N1'     : 5,      # Intervals in [0, b]
     'N2'     : 5,      # Intervals in [b, R]
+    'E0'     : 1,      # Initial electric field for ODE test case
 }
 
 # -----------------------------------------------------------------------
@@ -35,11 +38,20 @@ input_parameters = {
 # -----------------------------------------------------------------------
 paramstr  = 'N1'                        # parameter name in engine
 
+if question == "a":
+    paramstr = 'E0'
+    variable_array = np.array([0.0125, 0.025, 0.05, 0.1, 0.2])          # E0 = 0.08, 0.1, 0.12 V/m
+
 if question == "bii":
     variable_array = 2**np.arange(1, 9)          # N = 2, 4, 8, ..., 256
 
 if question == "bi":
     variable_array = np.array([5])
+
+if question == "c":
+    #paramstr = 'N2'
+    variable_array = np.array([4, 8, 16, 32])          # N2 = 1, 2, 4, ..., 64
+
 
 # Build a label for output directories / filenames
 outstr = (f"electrostatics_b_{input_parameters['b']:.2g}"
@@ -58,7 +70,7 @@ print("Saving results in:", outdir)
 # Output folder
 # ============================================================
 
-folder = r"/Users/tim/Documents/GitHub/Code-Physnum/Exercise4_2026"
+folder = r"/Users/matteorassat/Documents/GitHub/Code-Physnum/Exercise4_2026"
 fig_dir = os.path.join(folder, "figures_q_"+question)
 os.makedirs(fig_dir, exist_ok=True)
 
@@ -96,7 +108,7 @@ for val in variable_array:
 
 files = sorted(glob.glob(os.path.join(folder,outdir, "*.out")))
 
-datasets = [[[],[],[]] for _ in range(len(variable_array))]
+datasets = [[[],[],[],[]] for _ in range(len(variable_array))]
 data_types = []
 param_values = []
 param_name = None
@@ -118,13 +130,15 @@ for i,f in enumerate(files):
         indice = 1
     elif data_type == "ErDr":
         indice = 2
+    elif data_type == "ex1":
+        indice = 3
     else:
         raise ValueError(f"Unknown data type: {data_type}")
 
 
     data = np.loadtxt(f)
 
-    datasets[i//3][indice]=data
+    datasets[i//4][indice]=data # datasets[i//3][indice]=data
     if value not in param_values:
         param_values.append(value)
 
@@ -150,8 +164,72 @@ datasets = [datasets[i] for i in order]
 #PLOTS
 #-------------------------------------------------------------
 
-#plot bi
+phi_sol_an = (input_parameters['R']**2 - datasets[0][0][:,0]**2) / 4
+Er_sol_an =  datasets[0][2][:,0] / 2
+a0 = input_parameters['a0']
+R = input_parameters['R']
+def E_ANA(r_vals):
+        E_an = np.copy(r_vals)
+        mask = (r_vals != 0)
+        r = r_vals[mask]
+        E_an[mask] = (a0 * R**2 / (np.pi**2 * r)) * np.sin(np.pi * r / R) - (a0 * R / np.pi) * np.cos(np.pi * r / R)
+        E_an[~mask] = 0.0
+        return E_an
+
+
+if question == "a":
+    
+    plt.figure()
+    for i, dataset in enumerate(datasets):
+        E_data = dataset[3]
+        x = E_data[:,0]
+        E_tir = E_data[:,2]
+        plt.plot(x, E_tir, label=f"{param_name}={param_values[i]:.2g}")
+    x= np.linspace(0, 1, 100)
+    r_plot = R * (1 - x) 
+    E_analytique_vals = E_ANA(r_plot)
+    plt.plot(x, E_analytique_vals, 'k--', label="Analytical solution")
+    plt.xlabel("x [m]")
+    plt.ylabel("Ex [V/m^3]")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(fig_dir, f"divDrho_vs_r_{param_name}.png"), dpi=300)
+
 if question == "bi":
+    plt.figure()
+    for i, dataset in enumerate(datasets):
+        phi_data = dataset[0]
+        r = phi_data[:,0]
+        phi = phi_data[:,1]
+        plt.plot(r, phi, label=f"{param_name}={param_values[i]:.2g}")
+    plt.plot(r, phi_sol_an, 'k--', label="Analytical solution")
+    plt.xlabel("r [m]")
+    plt.ylabel("phi [V]")
+    plt.title("Electric potential")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(fig_dir, f"phi_vs_r_{param_name}.png"), dpi=300)
+
+    plt.figure()
+    for i, dataset in enumerate(datasets):
+        E_data = dataset[2]
+        r = E_data[:,0]
+        Er = E_data[:,1]
+        plt.plot(r, Er, label=f"{param_name}={param_values[i]:.2g}")
+    plt.plot(r, Er_sol_an, 'k--', label="Analytical solution")
+    plt.xlabel("r [m]")
+    plt.ylabel("Er [V/m]")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(fig_dir, f"Er_vs_r_{param_name}.png"), dpi=300)
+
+#--------------------------------------------------------------------------------------
+#question c 
+#--------------------------------------------------------------------------------------
+
+epsilon_0 = 8.854187817e-12
+
+if question == "c":
     plt.figure()
     for i, dataset in enumerate(datasets):
         phi_data = dataset[0]
@@ -160,8 +238,49 @@ if question == "bi":
         plt.plot(r, phi, label=f"{param_name}={param_values[i]:.2g}")
     plt.xlabel("r [m]")
     plt.ylabel("phi [V]")
-    plt.title("Electric potential")
     plt.legend()
     plt.grid()
     plt.savefig(os.path.join(fig_dir, f"phi_vs_r_{param_name}.png"), dpi=300)
-    plt.show()
+
+    plt.figure()
+    for i, dataset in enumerate(datasets):
+        E_data = dataset[2]
+        r = E_data[:,0]
+        Er = E_data[:,1]
+        plt.plot(r, Er, label=f"{param_name}={param_values[i]:.2g}")
+    plt.xlabel("r [m]")
+    plt.ylabel("Er [V/m]")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(fig_dir, f"Er_vs_r_{param_name}.png"), dpi=300)
+
+    plt.figure()
+    for i, dataset in enumerate(datasets):
+        E_data = dataset[2]
+        r = E_data[:,0]
+        D = E_data[:,2]
+        plt.plot(r, D / epsilon_0, label=f"{param_name}={param_values[i]:.2g}")
+    plt.xlabel("r [m]")
+    plt.ylabel(" D/epsilon_0 [V/m]")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(fig_dir, f"Deps_vs_r_{param_name}.png"), dpi=300)
+
+b=input_parameters['b']
+def rho_lib_an(r):
+    return a0 * np.sin(np.pi * r / b)
+
+if question == "d":
+    plt.figure()
+    for i, dataset in enumerate(datasets):
+        divDrho_data = dataset[1]
+        r_midmid = divDrho_data[:,0]
+        divDrho = divDrho_data[:,1]
+        rho_lib = divDrho_data[:,2]
+        plt.plot(r_midmid, rho_lib, label=f"{param_name}={param_values[i]:.2g}")
+        plt.plot(r_midmid, divDrho, 'k--', label="Analytical solution")
+    plt.xlabel("r [m]")
+    plt.ylabel("rho_lib [C/m^3]")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(fig_dir, f"rho_lib_vs_r_{param_name}.png"), dpi=300)

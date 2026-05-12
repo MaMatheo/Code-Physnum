@@ -3,12 +3,13 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "/Users/tim/Documents/GitHub/Code-Physnum/Exercise4_2026/common/ConfigFile.h"
-
+#include "/Users/matteorassat/Documents/GitHub/Code-Physnum/Exercise4_2026/common/ConfigFile.h"
+#include <valarray>       // valarray functions
 using namespace std;
 
 const double PI = 3.1415926535897932384626433832795028841971e0;
 const double epsilon_0 = 8.854187817e-12;
+const double nstep = 64;
 // Resolution d'un systeme d'equations lineaires par elimination de Gauss-Jordan
 // (tridiagonal system: diag, lower, upper, rhs all of consistent sizes)
 template<class T>
@@ -71,6 +72,24 @@ double rho_lib(double r,double b, double R, double a0, bool trivial)
     return epsilon_0; 
 }
 
+valarray<double> const dy( const valarray<double>& y, double R, double x)
+  {
+    valarray<double> dy = valarray<double>(0.e0, 2);
+    double E = -y[1];
+    dy[0] = R*E;
+    dy[1] = E/(1-x) - R;
+    return dy;
+  }
+
+valarray<double> rk4Step(double step, const valarray<double>& y, double R, double x)
+{
+    valarray<double> k1 = dy(y, R, x);
+    valarray<double> k2 = dy(y + 0.5 * k1*step, R, x + 0.5*step);  // peut etre multiplier par step
+    valarray<double> k3 = dy(y + 0.5 * k2*step, R, x + 0.5*step);
+    valarray<double> k4 = dy(y + k3*step, R, x + step);
+    return y + (k1 + 2*k2 + 2*k3 + k4)*step/6.0;
+}
+
 int main(int argc, char* argv[])
 {
     // USAGE: ./engine [configuration-file] [<key=value> ...]
@@ -89,7 +108,7 @@ int main(int argc, char* argv[])
     const double V0  = configFile.get<double>("V0");  // Boundary potential at r=R [V]
     const double a0  = configFile.get<double>("a0");  // Free charge density scale [V/m^2]
     const bool trivial = configFile.get<bool>("trivial"); // true: uniform test case
-
+    const double E0   = configFile.get<double>("E0");   // Initial electric field for ODE test case
     // Discretisation
     const int N1 = configFile.get<int>("N1"); // Intervals in [0, b]
     const int N2 = configFile.get<int>("N2"); // Intervals in [b, R]
@@ -118,7 +137,7 @@ int main(int argc, char* argv[])
     // TODO: fill h[i]  and  midPoint[i]
     for(size_t i = 0; i < ninters; i++){
         h[i] = r[i + 1] - r[i];
-        midPoint[i] = (r[i + 1 ] - r[i])/2;
+        midPoint[i] = (r[i + 1 ] + r[i])/2;
     }
 
     // ---------------------------------------------------------------
@@ -204,6 +223,23 @@ rhs[ninters] = V0;
         for (int k = 0; k < ninters - 1; ++k)
             ofs << rmidmid[k] << " " << div_Dr[k]
                 << " " << rho_at_midmid[k] << "\n";
+    }
+    {
+        ofstream ofs(output + "_ex1.out");
+        ofs.precision(15);
+        double x = 0.0;
+        double step = 1.0/ nstep;
+        valarray<double> y = {0., E0}; // initial conditions
+        int i = 0;
+        while (x < 1-0.5*step )  {
+            i += 1;
+            y = rk4Step(step, y, R, x);
+            x += step;
+            ofs << x << " " << y[0] << " " << y[1] << "\n";
+            if (i > 2*nstep) {
+             break;
+            }
+        }
     }
 
     return 0;
