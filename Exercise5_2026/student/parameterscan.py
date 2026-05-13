@@ -22,7 +22,6 @@ input_filename = 'trivial.in'   # base configuration file
 # Base parameters (values here are overwritten by the scan below)
 question = "d"  # "bi" for part bi, "bii" for part bii
 
-trivial = 'true' if question in ["bi", "bii", "a"] else 'false'
 
 input_parameters = {
     'tfin'      : 0,   
@@ -55,14 +54,12 @@ input_parameters = {
 paramstr  = 'tfin'                        # parameter name in engine
 variable_array = np.array([5, 10, 20, 40, 80]) # values to scan
 
-outstr = (f"electrostatics_b_{input_parameters['b']:.2g}"
-          f"_R_{input_parameters['R']:.2g}"
-          f"_trivial_{input_parameters['trivial']}")
+outstr = (f"data") # string to identify output files (e.g. "convergence", "hL_scan", etc.)
 
 # -----------------------------------------------------------------------
 # Create output directory
 # -----------------------------------------------------------------------
-outdir = question + f"Scan_{paramstr}_{outstr}"
+outdir = question + f"_Scan_{paramstr}_{outstr}"
 os.makedirs(outdir, exist_ok=True)
 print("Saving results in:", outdir)
 
@@ -71,7 +68,7 @@ print("Saving results in:", outdir)
 # Output folder
 # ============================================================
 
-folder = r"/Users/matteorassat/Documents/GitHub/Code-Physnum/Exercise4_2026"
+folder = r"/Users/tim/Documents/GitHub/Code-Physnum/Exercise5_2026/student"
 fig_dir = os.path.join(folder, "figures_q_"+question)
 os.makedirs(fig_dir, exist_ok=True)
 
@@ -83,9 +80,6 @@ for val in variable_array:
 
     params = input_parameters.copy()
     params[paramstr] = val
-    # For a convergence study keep N1 = N2
-    # if paramstr == 'N1':
-    #     params['N2'] = 4*val
 
     output_file = f"{outstr}_{paramstr}_{val}"
     output_path = os.path.join(outdir, output_file)
@@ -125,13 +119,13 @@ for i,f in enumerate(files):
     value = float(parts[-2])          # parameter value
     data_type = parts[-1]           # e.g. "phi", "divDrho", "ErDr"
     
-    if data_type == "phi":
+    if data_type == "en":
         indice = 0
-    elif data_type == "divDrho":
+    elif data_type == "f":
         indice = 1
-    elif data_type == "ErDr":
+    elif data_type == "v":
         indice = 2
-    elif data_type == "ex1":
+    elif data_type == "x":
         indice = 3
     else:
         raise ValueError(f"Unknown data type: {data_type}")
@@ -139,7 +133,9 @@ for i,f in enumerate(files):
 
     data = np.loadtxt(f)
 
-    datasets[i//4][indice]=data # datasets[i//3][indice]=data
+
+    datasets[i//4][indice]=data # fragile: relies on the order of files and data types
+    
     if value not in param_values:
         param_values.append(value)
 
