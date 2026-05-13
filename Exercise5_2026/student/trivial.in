@@ -1,0 +1,28 @@
+tfin           = 15.0              // ~4 transits: 4*L/u = 13.3 s
+L              = 20.0
+nx             = 100
+CFL            = 1.
+
+v_uniform     = true
+h00           = 3.669724489795918  // u=6 m/s -> h00 = u^2/g
+
+hL            = 8000.0
+hR            = 20.0
+xa            = 200.0e3
+xb            = 370.0e3
+xc            = 430.0e3
+xd            = 600.0e3
+
+equation_type = A                  // A, B, C are identical when v_uniform=true
+
+cb_gauche      = harmonique        // f(0,t) = A*sin(om*t)
+A              = 1.0
+om             = 5.0               // [rad/s]
+cb_droite      = sortie              // change to fixe, libre or sortie
+
+impose_nsteps  = false
+nsteps         = 100
+
+output         = trivial_sortie
+n_stride       = 1
+ecrire_f       = true
