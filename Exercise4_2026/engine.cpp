@@ -75,9 +75,8 @@ double rho_lib(double r,double b, double R, double a0, bool trivial)
 valarray<double> const dy( const valarray<double>& y, double R, double x)
   {
     valarray<double> dy = valarray<double>(0.e0, 2);
-    double E = -y[1];
-    dy[0] = R*E;
-    dy[1] = E/(1-x) - R;
+    dy[0] = -R*y[1];
+    dy[1] = y[1]/(1-x) - R;
     return dy;
   }
 
@@ -194,9 +193,9 @@ rhs[ninters] = V0;
     vector<double> rho_at_midmid(ninters - 1, 0.0);
     for (int k = 0; k < ninters - 1; ++k) {
         rmidmid[k] = 0.5 * (rmid[k] + rmid[k + 1]);
-        // TODO: compute div_Dr[k] and rho_at_midmid[k]
-        div_Dr[k] = (Dr[k + 1] - Dr[k])/midPoint[k+1];
-        rho_at_midmid[k] = rho_lib(rmidmid[k], b, R , a0, trivial)/epsilon_0;
+    //      TODO: compute div_Dr[k] and rho_at_midmid[k]
+        div_Dr[k] = (rmid[k+1]*Dr[k+1] - rmid[k]*Dr[k]) / (rmidmid[k] * (rmid[k+1] - rmid[k]));
+        rho_at_midmid[k] = rho_lib(rmidmid[k], b, R , a0, trivial) ;
     }
 
     // ---------------------------------------------------------------
@@ -231,7 +230,7 @@ rhs[ninters] = V0;
         double step = 1.0/ nstep;
         valarray<double> y = {0., E0}; // initial conditions
         int i = 0;
-        while (x < 1-0.5*step )  {
+        while (x < 1 - 1.5*step)  {
             i += 1;
             y = rk4Step(step, y, R, x);
             x += step;
