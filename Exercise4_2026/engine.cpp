@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "/Users/matteorassat/Documents/GitHub/Code-Physnum/Exercise4_2026/common/ConfigFile.h"
+#include "/Users/tim/Documents/GitHub/Code-Physnum/Exercise4_2026/common/ConfigFile.h"
 #include <valarray>       // valarray functions
 using namespace std;
 

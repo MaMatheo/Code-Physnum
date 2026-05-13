@@ -20,7 +20,7 @@ input_filename = 'trivial.in'   # base configuration file
 # Base parameters (values here are overwritten by the scan below)
 question = "a"  # "bi" for part bi, "bii" for part bii
 
-trivial = 'true' if question in ["bi", "bii"] else 'false'
+trivial = 'true' if question in ["bi", "bii","a"] else 'false'
 
 input_parameters = {
     'b'      : 0.1,   # Inner radius [m]
@@ -70,7 +70,7 @@ print("Saving results in:", outdir)
 # Output folder
 # ============================================================
 
-folder = r"/Users/matteorassat/Documents/GitHub/Code-Physnum/Exercise4_2026"
+folder = r"/Users/tim/Documents/GitHub/Code-Physnum/Exercise4_2026"
 fig_dir = os.path.join(folder, "figures_q_"+question)
 os.makedirs(fig_dir, exist_ok=True)
 
@@ -151,7 +151,7 @@ datasets = [datasets[i] for i in order]
 
 
 #POUR EXPLOITER DATASETS:
-#dataset[i] = [phi_data, divDrho_data, ErDr_data]
+#dataset[i] = [phi_data, divDrho_data, ErDr_data, ex1_data]
 
 #phi_data[i,j]: i la ligne (= point de grille), j la colonne (0 pour r, 1 pour phi)
 #divDrho_data[i,j]: idem, j=0 pour r_midmid, j=1 pour div_Dr/eps0, j=2 pour rho_lib/eps0
@@ -169,12 +169,15 @@ Er_sol_an =  datasets[0][2][:,0] / 2
 a0 = input_parameters['a0']
 R = input_parameters['R']
 def E_ANA(r_vals):
+    if input_parameters['trivial'] == 'false':
         E_an = np.copy(r_vals)
         mask = (r_vals != 0)
         r = r_vals[mask]
         E_an[mask] = (a0 * R**2 / (np.pi**2 * r)) * np.sin(np.pi * r / R) - (a0 * R / np.pi) * np.cos(np.pi * r / R)
         E_an[~mask] = 0.0
         return E_an
+    elif input_parameters['trivial'] == 'true':
+        return r_vals / 2
 
 
 if question == "a":
@@ -188,12 +191,12 @@ if question == "a":
     x= np.linspace(0, 1, 100)
     r_plot = R * (1 - x) 
     E_analytique_vals = E_ANA(r_plot)
-    plt.plot(x, E_analytique_vals, 'k--', label="Analytical solution")
-    plt.xlabel("x [m]")
-    plt.ylabel("Ex [V/m^3]")
+    plt.plot(x, E_analytique_vals, 'k--', label="Solution analytique")
+    plt.xlabel(r"$x$ [m]")
+    plt.ylabel(r"$E_x$ [V/m^3]")
     plt.legend()
     plt.grid()
-    plt.savefig(os.path.join(fig_dir, f"divDrho_vs_r_{param_name}.png"), dpi=300)
+    plt.savefig(os.path.join(fig_dir, f"E_vs_x_tir.png"), dpi=300)
 
 if question == "bi":
     plt.figure()

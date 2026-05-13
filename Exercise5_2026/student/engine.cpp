@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <string>
 #include <algorithm>
-#include "../../common/ConfigFile.h"
+#include "/Users/tim/Documents/GitHub/Code-Physnum/Exercise5_2026/common/ConfigFile.h"
 
 using namespace std;
 
@@ -14,7 +14,11 @@ const double PI = 3.1415926535897932384626433832795028841971e0;
 // TODO: Implémenter l'énergie E(t) = integral_0^L f^2(x,t) dx
 double energy(const vector<double>& fnow, double dx)
 {
-    return 0.0; // TODO: remplacer
+    double sum = 0.0;
+    for (double v : fnow) {
+        sum += v * v;
+    }
+    return dx * sum; // dx*sum_i f[i]^2
 }
 
 // TODO: Implémenter les conditions aux bords (fixe, libre, sortie, excitation)
@@ -91,10 +95,10 @@ int main(int argc, char* argv[])
 
     string bc_l           = configFile.get<string>("cb_gauche");
     string bc_r           = configFile.get<string>("cb_droite");
-    bool v_uniform        = configFile.get<bool>("v_uniform");
-    bool impose_nsteps    = configFile.get<bool>("impose_nsteps");
+    bool v_uniform        = configFile.get<bool>("v_uniform"); // true: exo1, false: exo2
+    bool impose_nsteps    = configFile.get<bool>("impose_nsteps"); // true: définit CLF,dt à partir nsteps, false: définit dt à partir de CFL
     bool ecrire_f         = configFile.get<bool>("ecrire_f");
-    string equation_type  = configFile.get<string>("equation_type");
+    string equation_type  = configFile.get<string>("equation_type"); // "A", "B" ou "C"
     string output         = configFile.get<string>("output");
 
     int N     = nx + 1;
@@ -103,7 +107,7 @@ int main(int argc, char* argv[])
     // TODO: Construire le maillage x[i], le profil h0(x) et vel2[i] = g * h0(x)
     vector<double> x(N), h0(N), vel2(N);
     for (int i = 0; i < N; ++i) {
-        x[i] = i * dx;
+        x[i] = i * dx;  
         if (v_uniform) {
             h0[i] = h00;
         } else {
@@ -113,11 +117,12 @@ int main(int argc, char* argv[])
     }
 
     double max_vel2 = *max_element(vel2.begin(), vel2.end());
-    // TODO: calculer dt à partir de CFL
-    double dt = 1.0; // MODIFIER
+    double max_vel = sqrt(max_vel2);
+    // DONE: calculer dt à partir de CFL
+    double dt = CFL * dx / max_vel; 
     if (impose_nsteps) {
-        dt  = 1.0; // MODIFIER, pourque on as 'nsteps' temporelle
-        CFL = 1.0; // MODIFIER
+        dt  = tfin/nsteps; 
+        CFL = max_vel * dt / dx;
     }
     cout << "dt = " << dt << ", max CFL = " << CFL << endl;
 
@@ -127,12 +132,12 @@ int main(int argc, char* argv[])
     ofstream fichier_f((output + "_f").c_str());   fichier_f.precision(15);
     ofstream fichier_en((output + "_en").c_str()); fichier_en.precision(15);
 
-    // TODO: Initialiser fpast, fnow, beta2
+    // DONE: Initialiser fpast, fnow, beta2
     vector<double> fpast(N, 0.0), fnow(N, 0.0), fnext(N, 0.0), beta2(N, 1.0);
     for (int i = 0; i < N; ++i) {
-        beta2[i] = 1.0; // TODO: calculer beta^2 aux points de maillage
+        beta2[i] = vel2[i]*dt/dx; // DONE: calculer beta^2 aux points de maillage
         fnow[i]  = 0.;
-        fpast[i] = 1.; // TODO: Implementer une condition initiale statique
+        fpast[i] = 0.; // DONE: Implementer une condition initiale statique
     }
 
     // Time loop
@@ -145,9 +150,22 @@ int main(int argc, char* argv[])
         }
         ++stride;
 
-        // TODO: Implémenter les schémas A, B et C
+        // DONE: Implémenter les schémas A, B et C
         for (int i = 1; i < N - 1; ++i) {
-            fnext[i] = 0.0; // TODO: schéma A (puis B ou C si equation_type le demande)
+            fnext[i] = 2*(1-beta2[i])*fnow[i] - fpast[i] + beta2[i]*(fnow[i+1]+fnow[i-1]); // DONE: schéma A (puis B ou C si equation_type le demande)
+
+            if (equation_type == "B") {
+                fnext[i] = ( beta2[i+1]*( fnow[i+2]+fnow[i] ) - beta2[i-1]*(fnow[i]-fnow[i-2]) )/4 + 2*fnow[i] -fpast[i]; // DONE: ajouter le terme de correction du schéma B
+
+            } else if (equation_type == "C") {
+                fnext[i] = beta2[i+1]*fnow[i+1] -2*beta2[i]*fnow[i] + beta2[i-1]*fnow[i-1] + 2*fnow[i] - fpast[i]; // DONE: ajouter le terme de correction du schéma C
+
+            } else if (equation_type == "B_fac") {
+                fnext[i] = 0.; 
+
+            } else {
+                cout << "schéma A" << endl;
+            }
         }
 
         boundary_condition(fnext, fnow, A, om, t + dt, dt, beta2, bc_l, bc_r, N);
